@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(file:*)",
+      "Bash(git init:*)",
+      "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins status)",
+      "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins add .claude-plugin/ .claude/ README.md plugins/ shared/)"
+    ]
+  }
+}

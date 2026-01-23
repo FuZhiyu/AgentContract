@@ -1,0 +1,7 @@
+{
+  "name": "worktree-manager",
+  "description": "Git worktree management for parallel development with sandbox isolation",
+  "author": {
+    "name": "Zhiyu Fu"
+  }
+}

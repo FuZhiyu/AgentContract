@@ -1,0 +1,7 @@
+{
+  "name": "pdf2markdown-converter",
+  "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
+  "author": {
+    "name": "Zhiyu Fu"
+  }
+}

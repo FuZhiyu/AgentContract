@@ -1,0 +1,65 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "econ-research-plugins",
+  "description": "Academic research plugins for economics and finance: project templates, paper reading, documentation, and git workflows",
+  "owner": {
+    "name": "Zhiyu Fu",
+    "email": "zhiyu.fu@example.com"
+  },
+  "plugins": [
+    {
+      "name": "project-setup",
+      "description": "Create new research projects with two-folder architecture (Git repo + Dropbox share)",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/project-setup",
+      "category": "research"
+    },
+    {
+      "name": "zotero-connector",
+      "description": "Read and analyze academic papers from Zotero library",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/zotero-connector",
+      "category": "research"
+    },
+    {
+      "name": "pdf2markdown-converter",
+      "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/pdf2markdown-converter",
+      "category": "research"
+    },
+    {
+      "name": "pdf-tools",
+      "description": "PDF manipulation toolkit: merge, split, extract text, fill forms",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/pdf-tools",
+      "category": "productivity"
+    },
+    {
+      "name": "work-journal",
+      "description": "Working journal creation and documentation quality for academic research",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/work-journal",
+      "category": "research"
+    },
+    {
+      "name": "worktree-manager",
+      "description": "Git worktree management for parallel development with sandbox isolation",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/worktree-manager",
+      "category": "development"
+    }
+  ]
+}

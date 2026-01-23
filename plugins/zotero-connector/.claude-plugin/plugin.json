@@ -1,0 +1,7 @@
+{
+  "name": "zotero-connector",
+  "description": "Read and analyze academic papers from Zotero library",
+  "author": {
+    "name": "Zhiyu Fu"
+  }
+}
