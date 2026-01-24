@@ -55,6 +55,7 @@ def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
     """
     Find directories in main worktree that are symlinks.
     Returns mapping of directory name -> resolved target path.
+    Used as legacy fallback when no manifest exists.
     """
     symlinked = {}
     for item in main_worktree.iterdir():
@@ -63,6 +64,80 @@ def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
             if target.exists():
                 symlinked[item.name] = target
     return symlinked
+
+
+def get_manifest_entries(worktree_path: Path) -> list[dict]:
+    """Read worktree manifest. Falls back to legacy symlink detection."""
+    manifest_path = worktree_path / ".worktree-manifest.json"
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            return json.load(f).get("entries", [])
+    # Legacy fallback: detect symlinked dirs in main worktree
+    main_worktree = get_main_worktree(worktree_path)
+    return [
+        {"path": name, "type": "directory", "source": str(target)}
+        for name, target in get_symlinked_dirs(main_worktree).items()
+    ]
+
+
+def diff_file(
+    worktree_file: Path,
+    source_file: Path,
+    rel_path: str,
+    dir_name: str,
+    include_unmodified: bool = False,
+    use_hash: bool = False,
+) -> FileChange | None:
+    """Compare a single COW-cloned file against its source."""
+    # Skip symlinks (cloud files that weren't modified)
+    if worktree_file.is_symlink():
+        return None
+    if not worktree_file.exists():
+        return None
+
+    wt_stat = worktree_file.stat()
+
+    if not source_file.exists():
+        return FileChange(
+            status="new",
+            worktree_path=str(worktree_file),
+            share_path=None,
+            relative_path=rel_path,
+            directory=dir_name,
+            size_worktree=wt_stat.st_size,
+            size_share=None,
+            mtime_worktree=wt_stat.st_mtime,
+            mtime_share=None,
+        )
+
+    is_same = compare_files(worktree_file, source_file, use_hash)
+    if not is_same:
+        sh_stat = source_file.stat()
+        return FileChange(
+            status="modified",
+            worktree_path=str(worktree_file),
+            share_path=str(source_file),
+            relative_path=rel_path,
+            directory=dir_name,
+            size_worktree=wt_stat.st_size,
+            size_share=sh_stat.st_size,
+            mtime_worktree=wt_stat.st_mtime,
+            mtime_share=sh_stat.st_mtime,
+        )
+    elif include_unmodified:
+        sh_stat = source_file.stat()
+        return FileChange(
+            status="unchanged",
+            worktree_path=str(worktree_file),
+            share_path=str(source_file),
+            relative_path=rel_path,
+            directory=dir_name,
+            size_worktree=wt_stat.st_size,
+            size_share=sh_stat.st_size,
+            mtime_worktree=wt_stat.st_mtime,
+            mtime_share=sh_stat.st_mtime,
+        )
+    return None
 
 
 def file_hash(path: Path, chunk_size: int = 65536) -> str:
@@ -210,39 +285,76 @@ def main():
         print(f"Error: Worktree path does not exist: {worktree_path}", file=sys.stderr)
         sys.exit(1)
 
-    # Get main worktree and its symlinked directories
+    # Get main worktree
     main_worktree = get_main_worktree(worktree_path)
-    symlinked_dirs = get_symlinked_dirs(main_worktree)
 
-    if not symlinked_dirs:
-        print("No symlinked directories found in main worktree", file=sys.stderr)
+    # Get manifest entries (falls back to legacy symlink detection)
+    entries = get_manifest_entries(worktree_path)
+
+    if not entries:
+        print("No manifest entries or symlinked directories found", file=sys.stderr)
         sys.exit(0)
 
     # Filter to specific dirs if requested
     if args.dirs:
-        symlinked_dirs = {k: v for k, v in symlinked_dirs.items() if k in args.dirs}
+        entries = [e for e in entries if e["path"].split("/")[0] in args.dirs]
 
     all_changes: list[FileChange] = []
 
-    for dir_name, share_path in symlinked_dirs.items():
-        worktree_dir = worktree_path / dir_name
-        if not worktree_dir.exists():
-            continue
+    for entry in entries:
+        entry_path = entry["path"]
+        source = Path(entry["source"])
+        worktree_item = worktree_path / entry_path
+        entry_type = entry.get("type", "directory")
 
-        changes = diff_directory(
-            worktree_dir,
-            share_path,
-            dir_name,
-            include_unmodified=args.include_unmodified,
-            use_hash=args.use_hash,
-        )
-        all_changes.extend(changes)
+        if entry_type == "directory":
+            if worktree_item.exists():
+                changes = diff_directory(
+                    worktree_item,
+                    source,
+                    entry_path,
+                    include_unmodified=args.include_unmodified,
+                    use_hash=args.use_hash,
+                )
+                all_changes.extend(changes)
+
+        elif entry_type == "cow_clone":
+            change = diff_file(
+                worktree_item,
+                source,
+                entry_path,
+                entry_path,
+                include_unmodified=args.include_unmodified,
+                use_hash=args.use_hash,
+            )
+            if change:
+                all_changes.append(change)
+
+        elif entry_type == "cloud_symlink":
+            # If still a symlink, unmodified. If real file, was modified.
+            if not worktree_item.is_symlink() and worktree_item.exists():
+                change = diff_file(
+                    worktree_item,
+                    source,
+                    entry_path,
+                    entry_path,
+                    include_unmodified=args.include_unmodified,
+                    use_hash=args.use_hash,
+                )
+                if change:
+                    all_changes.append(change)
+
+        elif entry_type == "user_symlink":
+            continue  # Shared state, no diff needed
+
+    # Build source map for JSON output
+    source_map = {e["path"]: e["source"] for e in entries}
 
     if args.json:
         output = {
             "worktree_path": str(worktree_path),
             "main_worktree": str(main_worktree),
-            "symlinked_dirs": {k: str(v) for k, v in symlinked_dirs.items()},
+            "manifest_entries": entries,
             "changes": [asdict(c) for c in all_changes],
             "summary": {
                 "new": len([c for c in all_changes if c.status == "new"]),
@@ -255,7 +367,8 @@ def main():
         # Human-readable output
         print(f"Worktree: {worktree_path}")
         print(f"Main worktree: {main_worktree}")
-        print(f"Comparing directories: {', '.join(symlinked_dirs.keys())}")
+        entry_names = [e["path"] for e in entries if e.get("type") != "user_symlink"]
+        print(f"Comparing: {', '.join(entry_names)}")
         print()
 
         new_files = [c for c in all_changes if c.status == "new"]

@@ -5,11 +5,11 @@ Usage: create_worktree.py [-b] [--deny-sandbox-bypass] <branch-name> [worktree-p
 """
 
 import argparse
+import json
 import os
 import re
 import shutil
 import subprocess
-import stat
 import sys
 from pathlib import Path
 
@@ -106,21 +106,148 @@ def is_git_tracked(path: str) -> bool:
         return False
 
 
-def is_gitignored(path: str) -> bool:
-    """Check if path is gitignored."""
+def get_gitignored_paths(src_dir: Path) -> list[tuple[Path, bool]]:
+    """Get all gitignored paths using git ls-files.
+
+    Returns (relative_path, is_directory) tuples.
+    Works correctly for all .gitignore patterns: output/, output/**, output, etc.
+    """
     result = subprocess.run(
-        ["git", "check-ignore", "-q", path],
-        capture_output=True
+        ["git", "ls-files", "--others", "--ignored", "--exclude-standard", "--directory"],
+        capture_output=True, text=True, cwd=src_dir
     )
-    return result.returncode == 0
+    if not result.stdout.strip():
+        return []
+    paths = []
+    for line in result.stdout.strip().split('\n'):
+        is_dir = line.endswith('/')
+        paths.append((Path(line.rstrip('/')), is_dir))
+    return paths
 
 
-def clone_non_trackable(src_dir: Path, dst_dir: Path, rel_path: str = "."):
-    """Clone non-git-trackable content: tracked symlink targets and gitignored items."""
+def parse_worktree_annotations(repo_root: Path) -> set[str]:
+    """Parse .gitignore for paths annotated with '# worktree:symlink'.
+
+    Returns set of normalized directory/file paths to symlink instead of COW clone.
+    """
+    symlink_paths = set()
+    gitignore_path = repo_root / ".gitignore"
+    if not gitignore_path.exists():
+        return symlink_paths
+
+    for line in gitignore_path.read_text().splitlines():
+        if "# worktree:symlink" not in line:
+            continue
+        # Extract pattern (everything before the comment)
+        pattern = line.split("#")[0].strip()
+        if not pattern:
+            continue
+        # Normalize: output/, output/**, output/* all -> "output"
+        normalized = pattern.rstrip("/")
+        # Strip trailing glob: output/** -> output, models/*.bin -> models
+        if "/**" in normalized:
+            normalized = normalized.split("/**")[0]
+        elif "/*" in normalized:
+            normalized = normalized.split("/*")[0]
+        symlink_paths.add(normalized)
+
+    return symlink_paths
+
+
+def clone_gitignored(src_dir: Path, dst_dir: Path) -> list[dict]:
+    """Clone all gitignored content. Returns manifest entries.
+
+    Handles user-annotated symlink paths first, then COW clones the rest.
+    """
+    entries = []
+
+    # 1. Parse annotations for paths that should be symlinked
+    symlink_paths = parse_worktree_annotations(src_dir)
+
+    # 2. Create symlinks for annotated paths
+    for sym_path in sorted(symlink_paths):
+        src_item = src_dir / sym_path
+        dst_item = dst_dir / sym_path
+        if not src_item.exists():
+            continue
+        if dst_item.exists() or dst_item.is_symlink():
+            continue
+        dst_item.parent.mkdir(parents=True, exist_ok=True)
+        resolved = src_item.resolve()
+        dst_item.symlink_to(resolved)
+        entries.append({
+            "path": sym_path,
+            "type": "user_symlink",
+            "source": str(resolved)
+        })
+        print(f"  Symlinking {sym_path} (user config)")
+
+    # 3. Clone remaining ignored paths (skip those under symlinked dirs)
+    ignored_paths = get_gitignored_paths(src_dir)
+    for rel_path, is_dir_hint in ignored_paths:
+        src_item = src_dir / rel_path
+        dst_item = dst_dir / rel_path
+
+        # Skip if this path is under a user-symlinked directory
+        rel_str = str(rel_path)
+        if any(rel_str == sp or rel_str.startswith(sp + "/") for sp in symlink_paths):
+            continue
+
+        if dst_item.exists() or dst_item.is_symlink():
+            continue
+
+        # Ensure parent directory exists
+        dst_item.parent.mkdir(parents=True, exist_ok=True)
+
+        # Resolve source (follows symlinks for gitignored symlinks)
+        resolved_source = src_item.resolve()
+
+        if src_item.is_dir():  # follows symlinks
+            entry = {
+                "path": str(rel_path),
+                "type": "directory",
+                "source": str(resolved_source)
+            }
+            print(f"  Cloning {rel_path} (gitignored directory)")
+            dst_item.mkdir(parents=True, exist_ok=True)
+            local_count, cloud_count = smart_copy_dir(src_item, dst_item, str(rel_path))
+            entry["local_files"] = local_count
+            entry["cloud_files"] = cloud_count
+            entries.append(entry)
+
+        elif src_item.is_file():  # follows symlinks
+            if is_dataless(src_item):
+                entry = {
+                    "path": str(rel_path),
+                    "type": "cloud_symlink",
+                    "source": str(resolved_source)
+                }
+                print(f"  Symlinking {rel_path} (cloud file)")
+                dst_item.symlink_to(resolved_source)
+            else:
+                entry = {
+                    "path": str(rel_path),
+                    "type": "cow_clone",
+                    "source": str(resolved_source)
+                }
+                print(f"  COW cloning {rel_path} (gitignored file)")
+                cow_copy(src_item, dst_item)
+            entries.append(entry)
+
+    return entries
+
+
+def clone_symlink_targets(src_dir: Path, dst_dir: Path, rel_path: str = ".") -> list[dict]:
+    """Clone tracked symlink targets (not gitignored items).
+
+    Only handles git-tracked symlinks that point to directories or files
+    outside the repo. Returns manifest entries.
+    """
+    entries = []
     try:
         items = list(src_dir.iterdir())
     except PermissionError:
-        return
+        return entries
 
     for item in items:
         name = item.name
@@ -133,23 +260,28 @@ def clone_non_trackable(src_dir: Path, dst_dir: Path, rel_path: str = "."):
         item_rel = name if rel_path == "." else f"{rel_path}/{name}"
 
         if item.is_symlink():
-            # Handle symlink - clone if tracked or gitignored
-            if is_git_tracked(item_rel) or is_gitignored(item_rel):
+            # Handle tracked symlinks only
+            if is_git_tracked(item_rel):
                 try:
                     target = item.resolve()
                 except (OSError, RuntimeError) as e:
-                    # OSError: symlink target doesn't exist
-                    # RuntimeError: circular symlink (infinite loop protection)
                     print(f"  Skipping {item_rel} (cannot resolve symlink: {e})")
                     continue
 
                 if target.is_dir():
                     # Directory symlink: create real dir and clone contents
-                    print(f"  Cloning {item_rel} (symlink -> {target})")
+                    print(f"  Cloning {item_rel} (tracked symlink -> {target})")
                     if dst_item.is_symlink() or dst_item.is_file():
                         dst_item.unlink()
                     dst_item.mkdir(parents=True, exist_ok=True)
-                    smart_copy_dir(target, dst_item, item_rel)
+                    local_count, cloud_count = smart_copy_dir(target, dst_item, item_rel)
+                    entries.append({
+                        "path": item_rel,
+                        "type": "directory",
+                        "source": str(target),
+                        "local_files": local_count,
+                        "cloud_files": cloud_count
+                    })
                 elif target.is_file():
                     # File symlink: COW clone or symlink based on cloud status
                     if dst_item.exists() or dst_item.is_symlink():
@@ -157,28 +289,25 @@ def clone_non_trackable(src_dir: Path, dst_dir: Path, rel_path: str = "."):
                     if is_dataless(target):
                         print(f"  Symlinking {item_rel} (cloud file)")
                         dst_item.symlink_to(target)
+                        entries.append({
+                            "path": item_rel,
+                            "type": "cloud_symlink",
+                            "source": str(target)
+                        })
                     else:
-                        print(f"  COW cloning {item_rel} (local file)")
+                        print(f"  COW cloning {item_rel} (tracked symlink)")
                         cow_copy(target, dst_item)
-
-        elif is_gitignored(item_rel):
-            # Gitignored file/dir - clone if not already exists
-            if not dst_item.exists():
-                if item.is_dir():
-                    print(f"  Cloning {item_rel} (gitignored)")
-                    dst_item.mkdir(parents=True, exist_ok=True)
-                    smart_copy_dir(item, dst_item, item_rel)
-                elif item.is_file():
-                    if is_dataless(item):
-                        print(f"  Symlinking {item_rel} (gitignored, cloud)")
-                        dst_item.symlink_to(item.resolve())
-                    else:
-                        print(f"  COW cloning {item_rel} (gitignored, local)")
-                        cow_copy(item, dst_item)
+                        entries.append({
+                            "path": item_rel,
+                            "type": "cow_clone",
+                            "source": str(target)
+                        })
 
         elif item.is_dir() and dst_item.is_dir():
-            # Regular directory - recurse
-            clone_non_trackable(item, dst_item, item_rel)
+            # Regular directory - recurse to find tracked symlinks inside
+            entries.extend(clone_symlink_targets(item, dst_item, item_rel))
+
+    return entries
 
 
 def main():
@@ -229,9 +358,20 @@ def main():
 
     subprocess.run(cmd, check=True)
 
-    # 2. COW clone non-git-trackable content
-    print("Creating COW clones for non-git-trackable content...")
-    clone_non_trackable(main_worktree, worktree_path)
+    # 2. Clone non-git-trackable content and build manifest
+    manifest = {"version": 1, "entries": []}
+
+    print("Cloning gitignored content...")
+    manifest["entries"].extend(clone_gitignored(main_worktree, worktree_path))
+
+    print("Cloning tracked symlink targets...")
+    manifest["entries"].extend(clone_symlink_targets(main_worktree, worktree_path))
+
+    # Write manifest
+    manifest_path = worktree_path / ".worktree-manifest.json"
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2)
+    print(f"  Wrote manifest ({len(manifest['entries'])} entries)")
 
     # 3. Configure sandbox settings
     print("Configuring sandbox...")

@@ -22,7 +22,6 @@ Usage:
 """
 import argparse
 import json
-import os
 import shutil
 import subprocess
 import sys
@@ -49,7 +48,7 @@ def get_main_worktree(worktree_path: Path) -> Path:
 
 
 def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
-    """Find symlinked directories in main worktree."""
+    """Find symlinked directories in main worktree (legacy fallback)."""
     symlinked = {}
     for item in main_worktree.iterdir():
         if item.is_symlink() and item.is_dir():
@@ -59,17 +58,42 @@ def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
     return symlinked
 
 
+def build_source_map(worktree_path: Path) -> dict[str, Path]:
+    """Build mapping from worktree-relative paths to source paths.
+
+    Uses manifest if available, falls back to symlink detection.
+    """
+    manifest_path = worktree_path / ".worktree-manifest.json"
+    if manifest_path.exists():
+        with open(manifest_path) as f:
+            entries = json.load(f).get("entries", [])
+        source_map = {}
+        for entry in entries:
+            source_map[entry["path"]] = Path(entry["source"])
+        return source_map
+    # Legacy fallback
+    main_worktree = get_main_worktree(worktree_path)
+    symlinked_dirs = get_symlinked_dirs(main_worktree)
+    return {name: target for name, target in symlinked_dirs.items()}
+
+
 def resolve_share_path(
     worktree_path: Path,
     relative_path: str,
     directory: str,
-    symlinked_dirs: dict[str, Path],
+    source_map: dict[str, Path],
 ) -> Path:
-    """Convert worktree file path to corresponding share path."""
-    share_dir = symlinked_dirs.get(directory)
-    if not share_dir:
-        raise ValueError(f"Directory '{directory}' is not a symlinked directory")
-    return share_dir / relative_path
+    """Convert worktree file path to corresponding share path.
+
+    Uses manifest-based source map. The 'directory' is the manifest entry path,
+    and 'relative_path' is the path within that entry.
+    """
+    source = source_map.get(directory)
+    if not source:
+        raise ValueError(f"'{directory}' not found in source map")
+    if relative_path:
+        return source / relative_path
+    return source
 
 
 def generate_rename_suffix(suffix: str | None, timestamp: bool = False) -> str:
@@ -163,8 +187,7 @@ def process_from_json(
         data = json.load(f)
 
     worktree_path = Path(data["worktree_path"])
-    main_worktree = get_main_worktree(worktree_path)
-    symlinked_dirs = get_symlinked_dirs(main_worktree)
+    source_map = build_source_map(worktree_path)
 
     changes = data.get("changes", [])
 
@@ -191,7 +214,7 @@ def process_from_json(
                 worktree_path,
                 change["relative_path"],
                 change["directory"],
-                symlinked_dirs,
+                source_map,
             )
 
         if process_file(worktree_file, share_file, action, suffix, dry_run, verbose):
@@ -214,8 +237,7 @@ def process_files(
     Process specific files by relative path.
     Files should be relative to worktree root (e.g., "Output/Analysis/result.csv").
     """
-    main_worktree = get_main_worktree(worktree_path)
-    symlinked_dirs = get_symlinked_dirs(main_worktree)
+    source_map = build_source_map(worktree_path)
 
     success = 0
     failure = 0
@@ -235,11 +257,11 @@ def process_files(
             failure += 1
             continue
 
-        # Determine share path
-        if directory in symlinked_dirs:
-            share_file = symlinked_dirs[directory] / relative_path
+        # Determine share path using source map
+        if directory in source_map:
+            share_file = source_map[directory] / relative_path if relative_path else source_map[directory]
         else:
-            print(f"  SKIP (not in symlinked dir): {file_path}", file=sys.stderr)
+            print(f"  SKIP (not in source map): {file_path}", file=sys.stderr)
             failure += 1
             continue
 
@@ -265,8 +287,7 @@ def interactive_mode(json_path: Path, suffix: str, dry_run: bool = False):
         return
 
     worktree_path = Path(data["worktree_path"])
-    main_worktree = get_main_worktree(worktree_path)
-    symlinked_dirs = get_symlinked_dirs(main_worktree)
+    source_map = build_source_map(worktree_path)
 
     print(f"Found {len(changes)} changed files.\n")
     print("Actions: [d]elete, [o]verwrite, [r]ename, [s]kip, [q]uit")
@@ -334,7 +355,7 @@ def interactive_mode(json_path: Path, suffix: str, dry_run: bool = False):
                 worktree_path,
                 change["relative_path"],
                 change["directory"],
-                symlinked_dirs,
+                source_map,
             )
 
         process_file(worktree_file, share_file, action, suffix, dry_run, verbose=True)
