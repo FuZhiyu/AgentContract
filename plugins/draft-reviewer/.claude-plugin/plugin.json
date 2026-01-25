@@ -1,0 +1,7 @@
+{
+  "name": "draft-reviewer",
+  "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
+  "author": {
+    "name": "Julie Zhiyu Fu"
+  }
+}

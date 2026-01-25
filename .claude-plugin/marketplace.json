@@ -34,16 +34,7 @@
       "source": "./plugins/pdf2markdown-converter",
       "category": "research"
     },
-    {
-      "name": "pdf-tools",
-      "description": "PDF manipulation toolkit: merge, split, extract text, fill forms",
-      "author": {
-        "name": "Zhiyu Fu"
-      },
-      "source": "./plugins/pdf-tools",
-      "category": "productivity"
-    },
-    {
+{
       "name": "work-journal",
       "description": "Working journal creation and documentation quality for academic research",
       "author": {
@@ -60,6 +51,33 @@
       },
       "source": "./plugins/worktree-manager",
       "category": "development"
+    },
+    {
+      "name": "review-doc-commit",
+      "description": "Review code, update documentation, and create well-organized topical git commits",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/review-doc-commit",
+      "category": "development"
+    },
+    {
+      "name": "require-guidance-read",
+      "description": "Hook that requires reading CLAUDE.md/AGENTS.md before accessing code directories",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/require-guidance-read",
+      "category": "development"
+    },
+    {
+      "name": "draft-reviewer",
+      "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
+      "author": {
+        "name": "Julie Zhiyu Fu"
+      },
+      "source": "./plugins/draft-reviewer",
+      "category": "research"
     }
   ]
 }
