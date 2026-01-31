@@ -12,6 +12,9 @@ A Claude Code plugin marketplace for academic research workflows.
 | `pdf-tools` | PDF manipulation: merge, split, extract, forms |
 | `work-journal` | Working journal and documentation quality |
 | `worktree-manager` | Git worktree for parallel development |
+| `draft-reviewer` | Multi-agent academic paper review |
+| `review-doc-commit` | Review code, update docs, and create topical commits |
+| `require-guidance-read` | Enforce reading CLAUDE.md before code access |
 
 ## Installation
 
@@ -80,3 +83,20 @@ Creates new research projects with:
 - Create isolated git worktrees
 - COW-clone non-git-tracked content (Data/, Output/)
 - Sandbox isolation for experiments
+
+### draft-reviewer
+- Multi-agent paper review system
+- Specialized agents: mathematical, writing, consistency, proofreading, citations
+- Supports quick, standard, and deep (parallel) thoroughness levels
+- Integrates with pdf2markdown-converter for PDF input
+
+### review-doc-commit
+- Review code changes against project CLAUDE.md guidelines
+- Auto-fix formatting issues, warn on critical problems
+- Ensure CLAUDE.md coverage for all directories
+- Group changes into topical commits
+
+### require-guidance-read
+- Hook-based plugin (no user-invocable skill)
+- Requires Claude to read CLAUDE.md/AGENTS.md before accessing code
+- Ensures project conventions are loaded before editing
