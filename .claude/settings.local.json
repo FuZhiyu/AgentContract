@@ -7,7 +7,14 @@
       "Bash(file:*)",
       "Bash(git init:*)",
       "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins status)",
-      "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins add .claude-plugin/ .claude/ README.md plugins/ shared/)"
+      "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins add .claude-plugin/ .claude/ README.md plugins/ shared/)",
+      "Bash(git -C /Users/zhiyufu/Dropbox/package_dev/EconResearchPlugins commit -m \"$\\(cat <<''EOF''\nInitial commit with worktree-manager bug fixes\n\nIncludes all EconResearchPlugins \\(worktree-manager, pdf-tools,\npdf2markdown-converter, project-setup, work-journal, zotero-connector\\).\n\nWorktree-manager fixes applied:\n- Fix bash return code overflow in remove_worktree.sh \\(values >255 wrap\\)\n- Fix mtime comparison using abs\\(\\) diff instead of one-sided check\n- Fix symlink path comparison using Path.relative_to\\(\\) instead of string prefix\n- Fix cow_copy\\(\\) to handle existing destinations and report failures\n- Fix symlink resolution to catch RuntimeError for circular symlinks\n- Simplify diff/sync to skip symlinks on either side \\(shared by design\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(chmod:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
