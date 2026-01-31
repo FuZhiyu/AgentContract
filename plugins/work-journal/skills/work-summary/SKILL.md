@@ -50,6 +50,21 @@ If figures exist in output folder:
 
 ```bash
 mkdir -p Notes/WorkingJournal/attachments
+```
+
+**For PDF figures:** Convert to PNG first using the pdf-tools script, then copy:
+
+```bash
+# Create a temp directory for conversion
+mkdir -p /tmp/pdf_convert
+python plugins/pdf-tools/scripts/convert_pdf_to_images.py Output/[subfolder]/figure.pdf /tmp/pdf_convert
+# Copy converted PNG(s) to attachments with descriptive names
+cp /tmp/pdf_convert/page_1.png Notes/WorkingJournal/attachments/YYYY-MM-DD-description.png
+```
+
+**For PNG/other image figures:** Copy directly:
+
+```bash
 cp Output/[subfolder]/figure.png Notes/WorkingJournal/attachments/YYYY-MM-DD-description.png
 ```
 
@@ -57,7 +72,7 @@ In markdown:
 ```markdown
 ![Descriptive caption](./attachments/YYYY-MM-DD-description.png)
 
-Source: [Original](../../Output/[subfolder]/figure.png)
+Source: [Original](../../Output/[subfolder]/figure.pdf)
 ```
 
 ### Step 4: Create Working Journal Entry
@@ -131,6 +146,7 @@ Every claim must link to supporting evidence:
 
 ### 4. Figures
 
+- **PDF figures must be converted to PNG** before embedding (use `plugins/pdf-tools/scripts/convert_pdf_to_images.py`)
 - Copy to attachments/ with descriptive filename
 - Cite original source location
 - Use descriptive captions
