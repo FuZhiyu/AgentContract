@@ -1,0 +1,7 @@
+{
+  "name": "review-doc-commit",
+  "description": "Review code, update documentation, and create well-organized topical git commits",
+  "author": {
+    "name": "Zhiyu Fu"
+  }
+}

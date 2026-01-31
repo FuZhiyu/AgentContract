@@ -1,6 +1,7 @@
 ---
-name: commit
-description: Review code, update documentation, and create well-organized git commits. Use when the user invokes /commit, asks to commit changes, or wants to review and commit their work. Handles three phases automatically - code review against project guidelines (CLAUDE.md), documentation updates (ensuring CLAUDE.md exists for each subfolder), and topical commits (grouping related changes, never mixing unrelated ones). Supports scoped commits (e.g., "/commit changes in folder A") or full-repo commits.
+name: review-doc-commit
+user-invocable: true
+description: Review code, update documentation, and create well-organized git commits. Use when the user invokes /review-doc-commit, asks to commit changes, or wants to review and commit their work. Handles three phases automatically - code review against project guidelines (CLAUDE.md), documentation updates (ensuring CLAUDE.md exists for each subfolder), and topical commits (grouping related changes, never mixing unrelated ones). Supports scoped commits (e.g., "/review-doc-commit changes in folder A") or full-repo commits.
 ---
 
 # Commit
@@ -16,8 +17,8 @@ Review, document, and commit workflow. Three phases run in sequence:
 
 Parse the user's request:
 
-- `/commit` or `/commit` with no path → all unstaged/staged changes
-- `/commit <message or path>` → scope to the specified path or use as context
+- `/review-doc-commit` with no path → all unstaged/staged changes
+- `/review-doc-commit <message or path>` → scope to the specified path or use as context
 
 Run `git status` and `git diff` (staged + unstaged) to identify all changed files. If a path scope was given, filter to only changes under that path.
 
