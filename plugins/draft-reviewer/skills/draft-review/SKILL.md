@@ -1,7 +1,6 @@
 ---
 name: draft-review
 description: Comprehensive academic paper review using specialized agents. Covers mathematical correctness (with numerical verification), writing clarity, terminology consistency, internal consistency, argumentation, proofreading, and citations. Use when user asks to "review draft", "check paper", "proofread manuscript", or requests feedback on academic writing. Can also verify code-paper consistency when source code is available. Supports thoroughness levels: quick, standard (default), deep (parallel agents).
-user-invocable: true
 ---
 
 # Draft Review Skill
@@ -154,18 +153,28 @@ If approved, use TodoWrite to create tasks for each auto-fixable issue.
 
 ## Subagent Dispatch Instructions
 
-Use the Task tool with `subagent_type: "general-purpose"` for each review agent.
+Use the Task tool with the appropriate registered `subagent_type` for each review agent.
+
+### Available Subagent Types
+
+| Subagent Type | Purpose |
+|--------------|---------|
+| `draft-reviewer:mathematical-reviewer` | Verify derivations, proofs, equations, notation |
+| `draft-reviewer:writing-clarity-reviewer` | Writing quality and clarity |
+| `draft-reviewer:consistency-checker` | Internal consistency of claims, numbers, terminology |
+| `draft-reviewer:argument-logic-reviewer` | Logical flow and argumentation |
+| `draft-reviewer:proofreader` | Typos, grammar, formatting |
+| `draft-reviewer:citation-checker` | Citation completeness and accuracy |
+| `draft-reviewer:code-paper-consistency` | Verify code matches paper claims (if code provided) |
 
 ### Dispatch Template
 
 ```
 Task tool parameters:
-  subagent_type: "general-purpose"
+  subagent_type: "draft-reviewer:[agent-name]"
   description: "[Agent type] review"
   prompt: |
-    You are acting as a [agent-type]-reviewer for an academic paper.
-
-    [Read the agent file at agents/[agent-name].md for detailed instructions]
+    Review the following academic paper sections.
 
     Document Summary:
     [Insert summary]
@@ -176,20 +185,25 @@ Task tool parameters:
     Cross-Reference Index:
     [Insert index]
 
-    Output your findings using the issue template format from references/issue-templates.md
+    Output your findings using this format:
+    ### [SEVERITY] [Category]: [Brief Title]
+    **Location:** [Section/equation/page]
+    **Issue:** [Description]
+    **Recommendation:** [Suggested fix]
+    **Auto-fixable:** [Yes/No]
 ```
 
 ### Scope to Agent Mapping
 
-| Agent File | Comprehensive | Mathematical | Writing | Quick |
-|------------|:-------------:|:------------:|:-------:|:-----:|
-| mathematical-reviewer.md | ✓ | ✓ | | |
-| writing-clarity-reviewer.md | ✓ | | ✓ | |
-| consistency-checker.md | ✓ | | | |
-| argument-logic-reviewer.md | ✓ | | | |
-| proofreader.md | ✓ | | | ✓ |
-| citation-checker.md | ✓ | | | |
-| code-paper-consistency.md | ✓* | | | |
+| Subagent Type | Comprehensive | Mathematical | Writing | Quick |
+|--------------|:-------------:|:------------:|:-------:|:-----:|
+| draft-reviewer:mathematical-reviewer | ✓ | ✓ | | |
+| draft-reviewer:writing-clarity-reviewer | ✓ | | ✓ | |
+| draft-reviewer:consistency-checker | ✓ | | | |
+| draft-reviewer:argument-logic-reviewer | ✓ | | | |
+| draft-reviewer:proofreader | ✓ | | | ✓ |
+| draft-reviewer:citation-checker | ✓ | | | |
+| draft-reviewer:code-paper-consistency | ✓* | | | |
 
 *Only if code path provided
 
