@@ -106,6 +106,15 @@ def is_git_tracked(path: str) -> bool:
         return False
 
 
+def is_within_repo(target: Path, repo_root: Path) -> bool:
+    """Return True if target is inside the repository root."""
+    try:
+        target.resolve().relative_to(repo_root.resolve())
+        return True
+    except ValueError:
+        return False
+
+
 def get_gitignored_paths(src_dir: Path) -> list[tuple[Path, bool]]:
     """Get all gitignored paths using git ls-files.
 
@@ -237,12 +246,20 @@ def clone_gitignored(src_dir: Path, dst_dir: Path) -> list[dict]:
     return entries
 
 
-def clone_symlink_targets(src_dir: Path, dst_dir: Path, rel_path: str = ".") -> list[dict]:
+def clone_symlink_targets(
+    src_dir: Path,
+    dst_dir: Path,
+    rel_path: str = ".",
+    repo_root: Path | None = None,
+) -> list[dict]:
     """Clone tracked symlink targets (not gitignored items).
 
     Only handles git-tracked symlinks that point to directories or files
     outside the repo. Returns manifest entries.
     """
+    if repo_root is None:
+        repo_root = src_dir
+
     entries = []
     try:
         items = list(src_dir.iterdir())
@@ -266,6 +283,12 @@ def clone_symlink_targets(src_dir: Path, dst_dir: Path, rel_path: str = ".") -> 
                     target = item.resolve()
                 except (OSError, RuntimeError) as e:
                     print(f"  Skipping {item_rel} (cannot resolve symlink: {e})")
+                    continue
+
+                # Keep git-tracked symlinks that point within the same repo.
+                # Git already materializes these correctly in each worktree.
+                if is_within_repo(target, repo_root):
+                    print(f"  Keeping {item_rel} as symlink (target in same repo)")
                     continue
 
                 if target.is_dir():
@@ -305,7 +328,7 @@ def clone_symlink_targets(src_dir: Path, dst_dir: Path, rel_path: str = ".") -> 
 
         elif item.is_dir() and dst_item.is_dir():
             # Regular directory - recurse to find tracked symlinks inside
-            entries.extend(clone_symlink_targets(item, dst_item, item_rel))
+            entries.extend(clone_symlink_targets(item, dst_item, item_rel, repo_root))
 
     return entries
 

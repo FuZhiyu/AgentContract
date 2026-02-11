@@ -537,6 +537,26 @@ class TestCloneSymlinkTargets:
         assert (dst / "config.json").exists()
         assert not (dst / "config.json").is_symlink()
 
+    def test_tracked_symlink_within_repo_kept(self, tmp_git_repo, tmp_path, monkeypatch):
+        """Tracked symlink pointing inside repo is kept as symlink."""
+        repo = tmp_git_repo
+        monkeypatch.chdir(repo)
+        (repo / "CLAUDE.md").write_text("# Instructions\n")
+        (repo / "AGENTS.md").symlink_to("CLAUDE.md")
+        subprocess.run(["git", "add", "CLAUDE.md", "AGENTS.md"], cwd=repo, capture_output=True, check=True)
+        subprocess.run(["git", "commit", "-m", "add internal symlink"], cwd=repo, capture_output=True, check=True)
+
+        dst = tmp_path / "dst"
+        dst.mkdir()
+        (dst / "CLAUDE.md").write_text("# Instructions\n")
+        (dst / "AGENTS.md").symlink_to("CLAUDE.md")
+
+        entries = create_worktree.clone_symlink_targets(repo, dst)
+
+        assert not any(e["path"] == "AGENTS.md" for e in entries)
+        assert (dst / "AGENTS.md").is_symlink()
+        assert (dst / "AGENTS.md").resolve() == (dst / "CLAUDE.md").resolve()
+
     def test_untracked_symlink_skipped(self, tmp_git_repo, tmp_path, monkeypatch):
         """Non-tracked symlinks are skipped."""
         repo = tmp_git_repo

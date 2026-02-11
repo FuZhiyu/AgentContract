@@ -136,6 +136,16 @@ smart_copy_dir() {
     [[ -n "$rel_display" ]] && echo "    ($local_count local COW, $cloud_count cloud symlinks)"
 }
 
+# Check whether resolved target is within repository root
+is_within_repo() {
+    local target="$1"
+    local repo_root="$2"
+    local target_abs repo_abs
+    target_abs=$(readlink -f "$target" 2>/dev/null) || return 1
+    repo_abs=$(readlink -f "$repo_root" 2>/dev/null) || return 1
+    [[ "$target_abs" == "$repo_abs" || "$target_abs" == "$repo_abs/"* ]]
+}
+
 clone_non_trackable() {
     local src_dir="$1"
     local dst_dir="$2"
@@ -156,6 +166,10 @@ clone_non_trackable() {
             if git ls-files --error-unmatch "$item_rel" &>/dev/null || \
                git check-ignore -q "$item_rel" 2>/dev/null; then
                 local target=$(readlink -f "$item")
+                if is_within_repo "$target" "$MAIN_WORKTREE"; then
+                    echo "  Keeping $item_rel as symlink (target in same repo)"
+                    continue
+                fi
                 if [[ -d "$target" ]]; then
                     # Directory symlink: create real dir and clone contents inside
                     echo "  Cloning $item_rel (symlink -> $target)"
