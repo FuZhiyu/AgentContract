@@ -1,5 +1,6 @@
 {
   "name": "work-journal",
+  "version": "0.2.0",
   "description": "Working journal creation and documentation quality for academic research",
   "author": {
     "name": "Zhiyu Fu"

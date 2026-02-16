@@ -1,5 +1,6 @@
 {
   "name": "draft-reviewer",
+  "version": "0.2.0",
   "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
   "author": {
     "name": "Julie Zhiyu Fu"

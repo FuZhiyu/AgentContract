@@ -1,6 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "econ-research-plugins",
+  "version": "0.2.0",
   "description": "Academic research plugins for economics and finance: project templates, paper reading, documentation, and git workflows",
   "owner": {
     "name": "Zhiyu Fu",
@@ -27,6 +28,7 @@
     },
     {
       "name": "pdf2markdown-converter",
+      "version": "0.2.0",
       "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
       "author": {
         "name": "Zhiyu Fu"
@@ -34,8 +36,19 @@
       "source": "./plugins/pdf2markdown-converter",
       "category": "research"
     },
-{
+    {
+      "name": "pdf-tools",
+      "version": "0.2.0",
+      "description": "PDF manipulation toolkit: merge, split, extract text, fill forms",
+      "author": {
+        "name": "Zhiyu Fu"
+      },
+      "source": "./plugins/pdf-tools",
+      "category": "research"
+    },
+    {
       "name": "work-journal",
+      "version": "0.2.0",
       "description": "Working journal creation and documentation quality for academic research",
       "author": {
         "name": "Zhiyu Fu"
@@ -45,6 +58,7 @@
     },
     {
       "name": "worktree-manager",
+      "version": "0.2.0",
       "description": "Git worktree management for parallel development with sandbox isolation",
       "author": {
         "name": "Zhiyu Fu"
@@ -54,6 +68,7 @@
     },
     {
       "name": "review-doc-commit",
+      "version": "0.2.0",
       "description": "Review code, update documentation, and create well-organized topical git commits",
       "author": {
         "name": "Zhiyu Fu"
@@ -62,16 +77,8 @@
       "category": "development"
     },
     {
-      "name": "require-guidance-read",
-      "description": "Hook that requires reading CLAUDE.md/AGENTS.md before accessing code directories",
-      "author": {
-        "name": "Zhiyu Fu"
-      },
-      "source": "./plugins/require-guidance-read",
-      "category": "development"
-    },
-    {
       "name": "draft-reviewer",
+      "version": "0.2.0",
       "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
       "author": {
         "name": "Julie Zhiyu Fu"
