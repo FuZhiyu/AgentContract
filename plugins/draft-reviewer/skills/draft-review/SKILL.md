@@ -1,6 +1,6 @@
 ---
 name: draft-review
-description: Comprehensive academic paper review using specialized agents. Covers mathematical correctness (with numerical verification), writing clarity, terminology consistency, internal consistency, argumentation, proofreading, and citations. Use when user asks to "review draft", "check paper", "proofread manuscript", or requests feedback on academic writing. Can also verify code-paper consistency when source code is available. Supports thoroughness levels: quick, standard (default), deep (parallel agents).
+description: "Comprehensive academic paper review using specialized agents. Covers mathematical correctness (with numerical verification), writing clarity, terminology consistency, internal consistency, argumentation, proofreading, and citations. Use when user asks to 'review draft', 'check paper', 'proofread manuscript', or requests feedback on academic writing. Can also verify code-paper consistency when source code is available. Supports thoroughness levels: quick, standard (default), deep (parallel agents)."
 ---
 
 # Draft Review Skill
