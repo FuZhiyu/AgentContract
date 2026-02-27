@@ -40,7 +40,64 @@ Create sandboxed git worktrees with full isolation for safe, autonomous Claude s
 
 COW (copy-on-write) clones share disk space until modified. Only changed files use additional space.
 
+## `.gitignore` Annotations for Folder Behavior
+
+You can control whether ignored paths are **independent per worktree** or **shared across worktrees** by annotating `.gitignore` patterns.
+
+### Default behavior (no annotation)
+
+- Ignored paths are copied into the new worktree (COW clone for local files).
+- This gives each worktree an independent copy.
+
+### Shared behavior via annotation
+
+Important: `.gitignore` does not support trailing comments on pattern lines.
+So `Data/  # worktree:symlink` is not a valid single-line ignore rule for Git.
+
+With the current parser, use this two-line form to get both Git ignore behavior and worktree annotation:
+
+```gitignore
+# Independent per worktree (default)
+Output/
+Notes/
+
+# Shared across worktrees
+Data/
+Data/  # worktree:symlink
+cache/**
+cache/**  # worktree:symlink
+```
+
+### Pattern normalization rules
+
+The annotation parser normalizes patterns before applying them:
+
+- `path/` -> `path`
+- `path/**` -> `path`
+- `path/*` -> `path`
+
+So this line:
+
+```gitignore
+models/*.bin  # worktree:symlink
+```
+
+is treated as `models` and symlinks the whole `models` path.
+
+### Priority and scope
+
+- Annotated paths are handled first.
+- Any ignored file under an annotated directory is skipped from COW cloning.
+- If an annotated path does not exist when creating the worktree, it is ignored.
+
+### Practical guideline
+
+- Use default (no annotation) for outputs/notes you want isolated per experiment.
+- For shared datasets/caches, pair an ignore rule with an annotated duplicate line (for example `Data/` plus `Data/  # worktree:symlink`).
+
 ## Creating a Worktree
+
+`create_worktree.py` is the single supported creation entrypoint (no shell wrapper).
 
 ```bash
 python3 .claude/skills/worktree-manager/scripts/create_worktree.py [OPTIONS] <branch-name> [worktree-path]
@@ -48,6 +105,8 @@ python3 .claude/skills/worktree-manager/scripts/create_worktree.py [OPTIONS] <br
 
 **Options:**
 - `-b`: Create new branch from current HEAD
+- `--existing`: Checkout an existing branch into a new worktree
+- `--remote <name>`: Remote to check when `--existing` branch is not local (default: `origin`)
 - `--deny-sandbox-bypass`: Deny agents from using `dangerouslyDisableSandbox` (default: allowed)
 
 **Arguments:**
@@ -64,6 +123,12 @@ python3 .claude/skills/worktree-manager/scripts/create_worktree.py feature/exper
 
 # Create new branch from current HEAD
 python3 .claude/skills/worktree-manager/scripts/create_worktree.py -b feature/new-feature
+
+# Checkout existing branch (local or remote-tracking)
+python3 .claude/skills/worktree-manager/scripts/create_worktree.py --existing feature/existing-work
+
+# Checkout existing branch from non-default remote
+python3 .claude/skills/worktree-manager/scripts/create_worktree.py --existing --remote upstream feature/existing-work
 
 # Deny sandbox bypass (for untrusted agents)
 python3 .claude/skills/worktree-manager/scripts/create_worktree.py --deny-sandbox-bypass feature/untrusted-work
@@ -134,6 +199,33 @@ The sandbox settings in `.claude/settings.local.json` are only applied when Clau
 bash .claude/skills/worktree-manager/scripts/remove_worktree.sh <worktree-path>
 ```
 
+## Stateless Diff/Sync Behavior
+
+`diff_worktree.py` and `sync_worktree.py` do not depend on manifest files.
+`diff_worktree.py` discovers managed paths from current repository state on every run using:
+
+- Gitignored paths (`git ls-files --others --ignored --exclude-standard --directory`)
+- Git-tracked symlinks that resolve outside the repository
+- Top-level symlinks in the main worktree (safety net)
+- `.gitignore` annotations `# worktree:symlink` as shared-only exclusions
+
+`diff_worktree.py` uses a union of:
+- Entries discovered from the main worktree
+- Ignored roots discovered in the target worktree
+
+This catches new ignored roots/files created only in the target worktree.
+
+`sync_worktree.py --from-json` is plan-driven:
+- It executes `target_path` emitted by `diff_worktree.py --json`
+- It does not re-discover destination paths in JSON mode
+- `target_path` is required in each change record
+
+### Cloud-only files (important)
+
+- If a path in the worktree is still a symlink, it is treated as unchanged/shared.
+- If that path is now a regular file, it is treated as a local override (`modified`).
+- `sync_worktree.py` skips symlinks and only syncs regular files.
+
 **Options:**
 - `--force, -f`: Skip change detection and remove immediately
 - `--check-only`: Only check for changes, don't remove
@@ -190,6 +282,8 @@ python3 .claude/skills/worktree-manager/scripts/diff_worktree.py /path/to/worktr
 # JSON output for scripting
 python3 .claude/skills/worktree-manager/scripts/diff_worktree.py /path/to/worktree --json
 ```
+
+Use fresh JSON generated by the current `diff_worktree.py` before running `sync_worktree.py --from-json`.
 
 ### Force Remove
 

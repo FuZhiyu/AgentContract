@@ -16,11 +16,17 @@ import argparse
 import hashlib
 import json
 import os
-import subprocess
 import sys
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Literal
+
+from worktree_discovery import (
+    discover_managed_entries,
+    get_gitignored_paths,
+    get_main_worktree,
+    promote_ignored_path_to_symlink_dir_root,
+)
 
 
 @dataclass
@@ -29,55 +35,13 @@ class FileChange:
     status: Literal["new", "modified", "unchanged"]
     worktree_path: str  # Absolute path in worktree
     share_path: str | None  # Absolute path in share (None if new)
+    target_path: str  # Absolute destination path for sync
     relative_path: str  # Path relative to the COW-cloned directory
-    directory: str  # Which directory (e.g., "Output", "Data", "Notes")
+    directory: str  # Managed entry path key
     size_worktree: int
     size_share: int | None
     mtime_worktree: float
     mtime_share: float | None
-
-
-def get_main_worktree(worktree_path: Path) -> Path:
-    """Get the main worktree path using git."""
-    result = subprocess.run(
-        ["git", "worktree", "list", "--porcelain"],
-        cwd=worktree_path,
-        capture_output=True,
-        text=True,
-    )
-    for line in result.stdout.split("\n"):
-        if line.startswith("worktree "):
-            return Path(line.split(" ", 1)[1])
-    raise RuntimeError("Could not find main worktree")
-
-
-def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
-    """
-    Find directories in main worktree that are symlinks.
-    Returns mapping of directory name -> resolved target path.
-    Used as legacy fallback when no manifest exists.
-    """
-    symlinked = {}
-    for item in main_worktree.iterdir():
-        if item.is_symlink() and item.is_dir():
-            target = item.resolve()
-            if target.exists():
-                symlinked[item.name] = target
-    return symlinked
-
-
-def get_manifest_entries(worktree_path: Path) -> list[dict]:
-    """Read worktree manifest. Falls back to legacy symlink detection."""
-    manifest_path = worktree_path / ".worktree-manifest.json"
-    if manifest_path.exists():
-        with open(manifest_path) as f:
-            return json.load(f).get("entries", [])
-    # Legacy fallback: detect symlinked dirs in main worktree
-    main_worktree = get_main_worktree(worktree_path)
-    return [
-        {"path": name, "type": "directory", "source": str(target)}
-        for name, target in get_symlinked_dirs(main_worktree).items()
-    ]
 
 
 def diff_file(
@@ -88,8 +52,8 @@ def diff_file(
     include_unmodified: bool = False,
     use_hash: bool = False,
 ) -> FileChange | None:
-    """Compare a single COW-cloned file against its source."""
-    # Skip symlinks (cloud files that weren't modified)
+    """Compare a single managed file against its source."""
+    # Symlink means this worktree still points to shared state.
     if worktree_file.is_symlink():
         return None
     if not worktree_file.exists():
@@ -97,11 +61,28 @@ def diff_file(
 
     wt_stat = worktree_file.stat()
 
+    # Source symlink + worktree real file => local override.
+    if source_file.exists() and source_file.is_symlink():
+        sh_stat = source_file.lstat()
+        return FileChange(
+            status="modified",
+            worktree_path=str(worktree_file),
+            share_path=str(source_file),
+            target_path=str(source_file),
+            relative_path=rel_path,
+            directory=dir_name,
+            size_worktree=wt_stat.st_size,
+            size_share=sh_stat.st_size,
+            mtime_worktree=wt_stat.st_mtime,
+            mtime_share=sh_stat.st_mtime,
+        )
+
     if not source_file.exists():
         return FileChange(
             status="new",
             worktree_path=str(worktree_file),
             share_path=None,
+            target_path=str(source_file),
             relative_path=rel_path,
             directory=dir_name,
             size_worktree=wt_stat.st_size,
@@ -117,6 +98,7 @@ def diff_file(
             status="modified",
             worktree_path=str(worktree_file),
             share_path=str(source_file),
+            target_path=str(source_file),
             relative_path=rel_path,
             directory=dir_name,
             size_worktree=wt_stat.st_size,
@@ -130,6 +112,7 @@ def diff_file(
             status="unchanged",
             worktree_path=str(worktree_file),
             share_path=str(source_file),
+            target_path=str(source_file),
             relative_path=rel_path,
             directory=dir_name,
             size_worktree=wt_stat.st_size,
@@ -154,6 +137,9 @@ def compare_files(worktree_file: Path, share_file: Path, use_hash: bool = False)
     Compare two files. Returns True if they are identical.
     Uses size + mtime for quick comparison, optionally hash for accuracy.
     """
+    if worktree_file.is_symlink() or share_file.is_symlink():
+        return False
+
     wt_stat = worktree_file.stat()
     sh_stat = share_file.stat()
 
@@ -181,15 +167,16 @@ def diff_directory(
     use_hash: bool = False,
 ) -> list[FileChange]:
     """
-    Compare a worktree directory against its share counterpart.
-    Skips symlinks that point to the share (cloud files we didn't COW clone).
+    Compare a worktree directory against its source counterpart.
     """
     changes = []
 
     # Walk the worktree directory, but don't follow symlinks
     for root, dirs, files in os.walk(worktree_dir, followlinks=False):
-        # Skip hidden directories
-        dirs[:] = [d for d in dirs if not d.startswith(".")]
+        # Skip internal VCS metadata directories only.
+        # Hidden control files/dirs (e.g. ".env", ".config") are valid
+        # non-git changes and must be detected.
+        dirs[:] = [d for d in dirs if d != ".git"]
         # Skip directories that are symlinks (they point to share)
         dirs[:] = [d for d in dirs if not (Path(root) / d).is_symlink()]
 
@@ -198,21 +185,39 @@ def diff_directory(
         share_root = share_dir / rel_root
 
         for filename in files:
-            # Skip hidden files
-            if filename.startswith("."):
+            # Skip internal VCS metadata files only.
+            if filename == ".git":
                 continue
 
             worktree_file = root_path / filename
             share_file = share_root / filename
             rel_path = str(rel_root / filename)
 
-            # Skip if either side is a symlink - symlinks are shared by design,
-            # there's nothing to diff (they point to the same file or are
-            # intentionally linked elsewhere)
-            if worktree_file.is_symlink() or (share_file.exists() and share_file.is_symlink()):
+            # Symlink in worktree means shared state is still intact.
+            if worktree_file.is_symlink():
+                continue
+
+            if not worktree_file.exists():
                 continue
 
             wt_stat = worktree_file.stat()
+
+            # Source symlink + worktree real file => local override.
+            if share_file.exists() and share_file.is_symlink():
+                sh_stat = share_file.lstat()
+                changes.append(FileChange(
+                    status="modified",
+                    worktree_path=str(worktree_file),
+                    share_path=str(share_file),
+                    target_path=str(share_file),
+                    relative_path=rel_path,
+                    directory=dir_name,
+                    size_worktree=wt_stat.st_size,
+                    size_share=sh_stat.st_size,
+                    mtime_worktree=wt_stat.st_mtime,
+                    mtime_share=sh_stat.st_mtime,
+                ))
+                continue
 
             if not share_file.exists():
                 # New file
@@ -220,6 +225,7 @@ def diff_directory(
                     status="new",
                     worktree_path=str(worktree_file),
                     share_path=None,
+                    target_path=str(share_file),
                     relative_path=rel_path,
                     directory=dir_name,
                     size_worktree=wt_stat.st_size,
@@ -236,6 +242,7 @@ def diff_directory(
                         status="modified",
                         worktree_path=str(worktree_file),
                         share_path=str(share_file),
+                        target_path=str(share_file),
                         relative_path=rel_path,
                         directory=dir_name,
                         size_worktree=wt_stat.st_size,
@@ -248,6 +255,7 @@ def diff_directory(
                         status="unchanged",
                         worktree_path=str(worktree_file),
                         share_path=str(share_file),
+                        target_path=str(share_file),
                         relative_path=rel_path,
                         directory=dir_name,
                         size_worktree=wt_stat.st_size,
@@ -268,6 +276,54 @@ def format_size(size: int) -> str:
     return f"{size:.1f}TB"
 
 
+def _is_under(base: str, maybe_child: str) -> bool:
+    return maybe_child == base or maybe_child.startswith(base + "/")
+
+
+def discover_union_entries(main_worktree: Path, worktree_path: Path) -> list[dict]:
+    """Discover managed entries using union of main and target worktree ignored roots."""
+    by_path = {entry["path"]: dict(entry) for entry in discover_managed_entries(main_worktree)}
+
+    ignored_candidates = sorted(
+        get_gitignored_paths(worktree_path),
+        key=lambda x: (len(x[0].parts), 0 if x[1] else 1, str(x[0])),
+    )
+    ignored_dir_roots: list[str] = []
+
+    for rel_path, is_dir_hint in ignored_candidates:
+        promoted_path, promoted_dir_hint = promote_ignored_path_to_symlink_dir_root(worktree_path, rel_path)
+        rel_str = str(promoted_path)
+        is_dir_hint = is_dir_hint or promoted_dir_hint
+        if rel_str in by_path:
+            if is_dir_hint:
+                ignored_dir_roots.append(rel_str)
+            continue
+        if any(_is_under(root, rel_str) for root in ignored_dir_roots):
+            continue
+
+        worktree_item = worktree_path / promoted_path
+        if not (worktree_item.exists() or worktree_item.is_symlink()):
+            continue
+
+        if is_dir_hint or (worktree_item.is_dir() and not worktree_item.is_symlink()):
+            entry_kind = "directory"
+            ignored_dir_roots.append(rel_str)
+        elif worktree_item.is_file():
+            entry_kind = "file"
+        else:
+            continue
+
+        by_path[rel_str] = {
+            "path": rel_str,
+            "source": str(main_worktree / promoted_path),
+            "entry_kind": entry_kind,
+            "shared_only": False,
+            "origin": "worktree_ignored",
+        }
+
+    return [by_path[path] for path in sorted(by_path)]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Compare worktree files against share folder")
     parser.add_argument("worktree_path", help="Path to the worktree")
@@ -277,7 +333,7 @@ def main():
     parser.add_argument("--use-hash", action="store_true",
                         help="Use content hash for accurate comparison (slower)")
     parser.add_argument("--dirs", nargs="+",
-                        help="Specific directories to check (default: auto-detect symlinked dirs)")
+                        help="Specific top-level directories to check (default: auto-detect)")
     args = parser.parse_args()
 
     worktree_path = Path(args.worktree_path).resolve()
@@ -288,11 +344,11 @@ def main():
     # Get main worktree
     main_worktree = get_main_worktree(worktree_path)
 
-    # Get manifest entries (falls back to legacy symlink detection)
-    entries = get_manifest_entries(worktree_path)
+    # Stateless entry discovery from current git/filesystem state.
+    entries = discover_union_entries(main_worktree, worktree_path)
 
     if not entries:
-        print("No manifest entries or symlinked directories found", file=sys.stderr)
+        print("No managed entries found", file=sys.stderr)
         sys.exit(0)
 
     # Filter to specific dirs if requested
@@ -305,10 +361,14 @@ def main():
         entry_path = entry["path"]
         source = Path(entry["source"])
         worktree_item = worktree_path / entry_path
-        entry_type = entry.get("type", "directory")
+        entry_kind = entry.get("entry_kind", "directory")
+        shared_only = bool(entry.get("shared_only", False))
 
-        if entry_type == "directory":
-            if worktree_item.exists():
+        if shared_only:
+            continue
+
+        if entry_kind == "directory":
+            if worktree_item.exists() and worktree_item.is_dir() and not worktree_item.is_symlink():
                 changes = diff_directory(
                     worktree_item,
                     source,
@@ -318,11 +378,11 @@ def main():
                 )
                 all_changes.extend(changes)
 
-        elif entry_type == "cow_clone":
+        elif entry_kind == "file":
             change = diff_file(
                 worktree_item,
                 source,
-                entry_path,
+                "",
                 entry_path,
                 include_unmodified=args.include_unmodified,
                 use_hash=args.use_hash,
@@ -330,31 +390,11 @@ def main():
             if change:
                 all_changes.append(change)
 
-        elif entry_type == "cloud_symlink":
-            # If still a symlink, unmodified. If real file, was modified.
-            if not worktree_item.is_symlink() and worktree_item.exists():
-                change = diff_file(
-                    worktree_item,
-                    source,
-                    entry_path,
-                    entry_path,
-                    include_unmodified=args.include_unmodified,
-                    use_hash=args.use_hash,
-                )
-                if change:
-                    all_changes.append(change)
-
-        elif entry_type == "user_symlink":
-            continue  # Shared state, no diff needed
-
-    # Build source map for JSON output
-    source_map = {e["path"]: e["source"] for e in entries}
-
     if args.json:
         output = {
             "worktree_path": str(worktree_path),
             "main_worktree": str(main_worktree),
-            "manifest_entries": entries,
+            "discovered_entries": entries,
             "changes": [asdict(c) for c in all_changes],
             "summary": {
                 "new": len([c for c in all_changes if c.status == "new"]),
@@ -367,7 +407,7 @@ def main():
         # Human-readable output
         print(f"Worktree: {worktree_path}")
         print(f"Main worktree: {main_worktree}")
-        entry_names = [e["path"] for e in entries if e.get("type") != "user_symlink"]
+        entry_names = [e["path"] for e in entries if not e.get("shared_only", False)]
         print(f"Comparing: {', '.join(entry_names)}")
         print()
 
@@ -377,14 +417,16 @@ def main():
         if new_files:
             print(f"NEW FILES ({len(new_files)}):")
             for c in sorted(new_files, key=lambda x: x.relative_path):
-                print(f"  + {c.directory}/{c.relative_path} ({format_size(c.size_worktree)})")
+                display_path = c.directory if not c.relative_path else f"{c.directory}/{c.relative_path}"
+                print(f"  + {display_path} ({format_size(c.size_worktree)})")
             print()
 
         if modified_files:
             print(f"MODIFIED FILES ({len(modified_files)}):")
             for c in sorted(modified_files, key=lambda x: x.relative_path):
                 size_info = f"{format_size(c.size_share)} -> {format_size(c.size_worktree)}"
-                print(f"  M {c.directory}/{c.relative_path} ({size_info})")
+                display_path = c.directory if not c.relative_path else f"{c.directory}/{c.relative_path}"
+                print(f"  M {display_path} ({size_info})")
             print()
 
         if not new_files and not modified_files:

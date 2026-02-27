@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Create a sandboxed git worktree with COW clones for symlink targets.
 
-Usage: create_worktree.py [-b] [--deny-sandbox-bypass] <branch-name> [worktree-path]
+Usage: create_worktree.py [-b|--existing] [--remote <name>] [--deny-sandbox-bypass] <branch-name> [worktree-path]
 """
 
 import argparse
-import json
 import os
 import re
 import shutil
@@ -164,7 +163,7 @@ def parse_worktree_annotations(repo_root: Path) -> set[str]:
 
 
 def clone_gitignored(src_dir: Path, dst_dir: Path) -> list[dict]:
-    """Clone all gitignored content. Returns manifest entries.
+    """Clone all gitignored content. Returns copied-entry metadata.
 
     Handles user-annotated symlink paths first, then COW clones the rest.
     """
@@ -255,7 +254,7 @@ def clone_symlink_targets(
     """Clone tracked symlink targets (not gitignored items).
 
     Only handles git-tracked symlinks that point to directories or files
-    outside the repo. Returns manifest entries.
+    outside the repo. Returns copied-entry metadata.
     """
     if repo_root is None:
         repo_root = src_dir
@@ -333,11 +332,78 @@ def clone_symlink_targets(
     return entries
 
 
+def git_ref_exists(ref: str) -> bool:
+    """Return True if a git ref exists in the local repository."""
+    result = subprocess.run(
+        ["git", "show-ref", "--verify", "--quiet", ref],
+        capture_output=True
+    )
+    return result.returncode == 0
+
+
+def resolve_existing_branch(branch: str, remote: str = "origin") -> tuple[str, str]:
+    """Resolve an existing branch to either a local or remote-tracking ref.
+
+    Returns:
+      ("local", branch) if refs/heads/<branch> exists
+      ("remote", "<remote>/<branch>") if refs/remotes/<remote>/<branch> exists
+    """
+    local_ref = f"refs/heads/{branch}"
+    if git_ref_exists(local_ref):
+        return "local", branch
+
+    remote_ref = f"refs/remotes/{remote}/{branch}"
+    if git_ref_exists(remote_ref):
+        return "remote", f"{remote}/{branch}"
+
+    raise ValueError(
+        f"Branch '{branch}' not found locally or as '{remote}/{branch}'. "
+        f"Try 'git fetch {remote}'."
+    )
+
+
+def build_worktree_add_command(
+    branch: str,
+    worktree_path: Path,
+    create_branch: bool = False,
+    existing_branch: bool = False,
+    remote: str = "origin",
+) -> list[str]:
+    """Build a git worktree add command for branch creation/checkout modes."""
+    cmd = ["git", "worktree", "add"]
+
+    if create_branch and existing_branch:
+        raise ValueError("Cannot use both create-branch and existing-branch modes.")
+
+    if create_branch:
+        cmd.extend([str(worktree_path), "-b", branch])
+        return cmd
+
+    if existing_branch:
+        branch_kind, branch_ref = resolve_existing_branch(branch, remote)
+        if branch_kind == "local":
+            cmd.extend([str(worktree_path), branch])
+        else:
+            cmd.extend(["--track", "-b", branch, str(worktree_path), branch_ref])
+        return cmd
+
+    cmd.extend([str(worktree_path), branch])
+    return cmd
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Create a sandboxed git worktree with COW clones"
     )
     parser.add_argument("-b", action="store_true", help="Create new branch")
+    parser.add_argument(
+        "--existing", action="store_true",
+        help="Checkout an existing branch (local or remote-tracking) in a new worktree"
+    )
+    parser.add_argument(
+        "--remote", default="origin",
+        help="Remote name to use with --existing when creating from remote-tracking branch (default: origin)"
+    )
     parser.add_argument(
         "--deny-sandbox-bypass", action="store_true",
         help="Deny agents from using dangerouslyDisableSandbox"
@@ -357,6 +423,12 @@ def main():
     if not re.match(r"^[a-zA-Z0-9/_.-]+$", args.branch):
         print("Error: Invalid branch name. Use only alphanumeric, /, -, _, .", file=sys.stderr)
         sys.exit(1)
+    if not re.match(r"^[a-zA-Z0-9_.-]+$", args.remote):
+        print("Error: Invalid remote name. Use only alphanumeric, -, _, .", file=sys.stderr)
+        sys.exit(1)
+    if args.b and args.existing:
+        print("Error: Cannot combine -b and --existing", file=sys.stderr)
+        sys.exit(1)
 
     # Get paths
     main_worktree = Path.cwd()
@@ -373,28 +445,39 @@ def main():
     print(f"Main worktree: {main_worktree}")
 
     # 1. Create git worktree
-    cmd = ["git", "worktree", "add", str(worktree_path)]
-    if args.b:
-        cmd.extend(["-b", args.branch])
-    else:
-        cmd.append(args.branch)
+    try:
+        cmd = build_worktree_add_command(
+            branch=args.branch,
+            worktree_path=worktree_path,
+            create_branch=args.b,
+            existing_branch=args.existing,
+            remote=args.remote,
+        )
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        stdout = (e.stdout or "").strip()
+        if stdout:
+            print(stdout, file=sys.stderr)
+        if stderr:
+            print(stderr, file=sys.stderr)
+        print(
+            "Error: Failed to create git worktree.",
+            file=sys.stderr,
+        )
+        sys.exit(e.returncode or 1)
 
-    # 2. Clone non-git-trackable content and build manifest
-    manifest = {"version": 1, "entries": []}
-
+    # 2. Clone non-git-trackable content
     print("Cloning gitignored content...")
-    manifest["entries"].extend(clone_gitignored(main_worktree, worktree_path))
+    clone_gitignored(main_worktree, worktree_path)
 
     print("Cloning tracked symlink targets...")
-    manifest["entries"].extend(clone_symlink_targets(main_worktree, worktree_path))
-
-    # Write manifest
-    manifest_path = worktree_path / ".worktree-manifest.json"
-    with open(manifest_path, "w") as f:
-        json.dump(manifest, f, indent=2)
-    print(f"  Wrote manifest ({len(manifest['entries'])} entries)")
+    clone_symlink_targets(main_worktree, worktree_path)
 
     # 3. Configure sandbox settings
     print("Configuring sandbox...")

@@ -23,69 +23,32 @@ Usage:
 import argparse
 import json
 import shutil
-import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
+from worktree_discovery import build_source_map as build_stateless_source_map
+from worktree_discovery import get_main_worktree
+
 
 Action = Literal["delete", "overwrite", "rename"]
 
 
-def get_main_worktree(worktree_path: Path) -> Path:
-    """Get the main worktree path using git."""
-    result = subprocess.run(
-        ["git", "worktree", "list", "--porcelain"],
-        cwd=worktree_path,
-        capture_output=True,
-        text=True,
-    )
-    for line in result.stdout.split("\n"):
-        if line.startswith("worktree "):
-            return Path(line.split(" ", 1)[1])
-    raise RuntimeError("Could not find main worktree")
-
-
-def get_symlinked_dirs(main_worktree: Path) -> dict[str, Path]:
-    """Find symlinked directories in main worktree (legacy fallback)."""
-    symlinked = {}
-    for item in main_worktree.iterdir():
-        if item.is_symlink() and item.is_dir():
-            target = item.resolve()
-            if target.exists():
-                symlinked[item.name] = target
-    return symlinked
-
-
 def build_source_map(worktree_path: Path) -> dict[str, Path]:
-    """Build mapping from worktree-relative paths to source paths.
-
-    Uses manifest if available, falls back to symlink detection.
-    """
-    manifest_path = worktree_path / ".worktree-manifest.json"
-    if manifest_path.exists():
-        with open(manifest_path) as f:
-            entries = json.load(f).get("entries", [])
-        source_map = {}
-        for entry in entries:
-            source_map[entry["path"]] = Path(entry["source"])
-        return source_map
-    # Legacy fallback
+    """Build mapping from worktree-relative paths to source paths."""
     main_worktree = get_main_worktree(worktree_path)
-    symlinked_dirs = get_symlinked_dirs(main_worktree)
-    return {name: target for name, target in symlinked_dirs.items()}
+    return build_stateless_source_map(main_worktree, include_shared=False)
 
 
 def resolve_share_path(
-    worktree_path: Path,
     relative_path: str,
     directory: str,
     source_map: dict[str, Path],
 ) -> Path:
     """Convert worktree file path to corresponding share path.
 
-    Uses manifest-based source map. The 'directory' is the manifest entry path,
+    Uses stateless source map. The 'directory' is the managed entry path,
     and 'relative_path' is the path within that entry.
     """
     source = source_map.get(directory)
@@ -186,9 +149,6 @@ def process_from_json(
     with open(json_path) as f:
         data = json.load(f)
 
-    worktree_path = Path(data["worktree_path"])
-    source_map = build_source_map(worktree_path)
-
     changes = data.get("changes", [])
 
     # Filter by status if specified
@@ -205,17 +165,10 @@ def process_from_json(
     for change in changes:
         worktree_file = Path(change["worktree_path"])
 
-        # Determine share path
-        if change["share_path"]:
-            share_file = Path(change["share_path"])
-        else:
-            # New file - compute share path
-            share_file = resolve_share_path(
-                worktree_path,
-                change["relative_path"],
-                change["directory"],
-                source_map,
-            )
+        target_path = change.get("target_path")
+        if not target_path:
+            raise ValueError("Missing required field 'target_path' in diff JSON change record")
+        share_file = Path(target_path)
 
         if process_file(worktree_file, share_file, action, suffix, dry_run, verbose):
             success += 1
@@ -258,7 +211,9 @@ def process_files(
             continue
 
         # Determine share path using source map
-        if directory in source_map:
+        if file_path in source_map:
+            share_file = source_map[file_path]
+        elif directory in source_map:
             share_file = source_map[directory] / relative_path if relative_path else source_map[directory]
         else:
             print(f"  SKIP (not in source map): {file_path}", file=sys.stderr)
@@ -286,9 +241,6 @@ def interactive_mode(json_path: Path, suffix: str, dry_run: bool = False):
         print("No new or modified files to process.")
         return
 
-    worktree_path = Path(data["worktree_path"])
-    source_map = build_source_map(worktree_path)
-
     print(f"Found {len(changes)} changed files.\n")
     print("Actions: [d]elete, [o]verwrite, [r]ename, [s]kip, [q]uit")
     print("         [D]elete all, [O]verwrite all, [R]ename all, [S]kip all\n")
@@ -297,7 +249,9 @@ def interactive_mode(json_path: Path, suffix: str, dry_run: bool = False):
 
     for i, change in enumerate(changes, 1):
         status = change["status"].upper()
-        rel_path = f"{change['directory']}/{change['relative_path']}"
+        rel_path = change["directory"]
+        if change["relative_path"]:
+            rel_path = f"{rel_path}/{change['relative_path']}"
 
         print(f"[{i}/{len(changes)}] {status}: {rel_path}")
 
@@ -348,15 +302,10 @@ def interactive_mode(json_path: Path, suffix: str, dry_run: bool = False):
             continue
 
         worktree_file = Path(change["worktree_path"])
-        if change["share_path"]:
-            share_file = Path(change["share_path"])
-        else:
-            share_file = resolve_share_path(
-                worktree_path,
-                change["relative_path"],
-                change["directory"],
-                source_map,
-            )
+        target_path = change.get("target_path")
+        if not target_path:
+            raise ValueError("Missing required field 'target_path' in diff JSON change record")
+        share_file = Path(target_path)
 
         process_file(worktree_file, share_file, action, suffix, dry_run, verbose=True)
 
