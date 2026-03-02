@@ -9,12 +9,10 @@ A Claude Code plugin marketplace for academic research workflows.
 | `project-setup` | Create research projects with two-folder architecture |
 | `zotero-connector` | Read papers from Zotero library |
 | `pdf2markdown-converter` | Convert PDFs to markdown via Mistral OCR |
-| `pdf-tools` | PDF manipulation: merge, split, extract, forms |
 | `work-journal` | Working journal and documentation quality |
-| `worktree-manager` | Git worktree for parallel development |
+| `worktree-data-sync` | Sync non-git data across existing worktrees |
 | `draft-reviewer` | Multi-agent academic paper review |
 | `review-doc-commit` | Review code, update docs, and create topical commits |
-| `require-guidance-read` | Enforce reading CLAUDE.md before code access |
 
 ## Installation
 
@@ -68,21 +66,16 @@ Creates new research projects with:
 - Extract images to separate folder
 - Great for scanned documents
 
-### pdf-tools
-- Merge, split PDFs
-- Extract text and tables
-- Fill PDF forms
-
 ### work-journal
 - Create factual working journal entries
 - Review code for research correctness
 - Validate documentation accuracy
 - Summarize analysis results
 
-### worktree-manager
-- Create isolated git worktrees
-- COW-clone non-git-tracked content (Data/, Output/)
-- Sandbox isolation for experiments
+### worktree-data-sync
+- Sync non-git files between existing worktrees
+- Seed missing managed files from one worktree to another
+- Diff and apply overwrite/rename actions for managed data
 
 ### draft-reviewer
 - Multi-agent paper review system
@@ -96,7 +89,3 @@ Creates new research projects with:
 - Ensure CLAUDE.md coverage for all directories
 - Group changes into topical commits
 
-### require-guidance-read
-- Hook-based plugin (no user-invocable skill)
-- Requires Claude to read CLAUDE.md/AGENTS.md before accessing code
-- Ensures project conventions are loaded before editing

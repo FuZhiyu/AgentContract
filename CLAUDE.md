@@ -9,12 +9,10 @@ plugins/           # Individual plugins, each with its own .claude-plugin/
   ├── project-setup/
   ├── zotero-connector/
   ├── pdf2markdown-converter/
-  ├── pdf-tools/
   ├── work-journal/
-  ├── worktree-manager/
+  ├── worktree-data-sync/
   ├── draft-reviewer/
-  ├── review-doc-commit/
-  └── require-guidance-read/
+  └── review-doc-commit/
 shared/            # Shared utilities used across plugins
   └── config.py    # Config loader for .claude/econ-research.yaml
 ```
@@ -98,5 +96,4 @@ config = load_config('plugin-name')
 | `work-journal` | Skill + Agent | Working journal entries with quality validation |
 | `draft-reviewer` | Skill + Agents | Multi-agent paper review system |
 | `review-doc-commit` | Skill | Code review, docs, and topical git commits |
-| `worktree-manager` | Skill | Git worktrees with COW isolation |
-| `require-guidance-read` | Hook | Enforces CLAUDE.md reading before code access |
+| `worktree-data-sync` | Skill | Sync non-git data across existing worktrees |
