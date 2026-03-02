@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "description": "Academic research plugins for economics and finance: project templates, paper reading, documentation, and git workflows",
   "owner": {
-    "name": "Zhiyu Fu",
+    "name": "Julie Fu",
     "email": "zhiyu.fu@example.com"
   },
   "plugins": [
@@ -12,7 +12,7 @@
       "name": "project-setup",
       "description": "Create new research projects with two-folder architecture (Git repo + Dropbox share)",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
       "source": "./plugins/project-setup",
       "category": "research"
@@ -21,7 +21,7 @@
       "name": "zotero-connector",
       "description": "Read and analyze academic papers from Zotero library",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
       "source": "./plugins/zotero-connector",
       "category": "research"
@@ -31,19 +31,9 @@
       "version": "0.2.0",
       "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
       "source": "./plugins/pdf2markdown-converter",
-      "category": "research"
-    },
-    {
-      "name": "pdf-tools",
-      "version": "0.2.0",
-      "description": "PDF manipulation toolkit: merge, split, extract text, fill forms",
-      "author": {
-        "name": "Zhiyu Fu"
-      },
-      "source": "./plugins/pdf-tools",
       "category": "research"
     },
     {
@@ -51,19 +41,19 @@
       "version": "0.2.0",
       "description": "Working journal creation and documentation quality for academic research",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
       "source": "./plugins/work-journal",
       "category": "research"
     },
     {
-      "name": "worktree-manager",
+      "name": "worktree-data-sync",
       "version": "0.2.0",
-      "description": "Git worktree management for parallel development with sandbox isolation",
+      "description": "Sync non-git data between existing git worktrees",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
-      "source": "./plugins/worktree-manager",
+      "source": "./plugins/worktree-data-sync",
       "category": "development"
     },
     {
@@ -71,7 +61,7 @@
       "version": "0.2.0",
       "description": "Review code, update documentation, and create well-organized topical git commits",
       "author": {
-        "name": "Zhiyu Fu"
+        "name": "Julie Fu"
       },
       "source": "./plugins/review-doc-commit",
       "category": "development"

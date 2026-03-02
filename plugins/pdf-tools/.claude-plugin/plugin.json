@@ -1,8 +1,0 @@
-{
-  "name": "pdf-tools",
-  "version": "0.2.0",
-  "description": "PDF manipulation toolkit: merge, split, extract text, fill forms",
-  "author": {
-    "name": "Zhiyu Fu"
-  }
-}
