@@ -1,8 +1,11 @@
 {
   "name": "worktree-data-sync",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Sync non-git data between existing git worktrees",
   "author": {
     "name": "Zhiyu Fu"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["git", "worktree", "data-sync", "development"]
 }

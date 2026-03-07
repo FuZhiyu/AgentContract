@@ -4,5 +4,8 @@
   "description": "Working journal entries and markdown report generation for academic research",
   "author": {
     "name": "Zhiyu Fu"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["research", "journal", "documentation", "academic", "reports"]
 }

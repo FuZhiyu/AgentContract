@@ -1,24 +1,16 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "econ-research-plugins",
-  "version": "0.2.0",
-  "description": "Academic research plugins for economics and finance: project templates, paper reading, documentation, and git workflows",
+  "name": "agent-contract",
+  "version": "0.3.0",
+  "description": "Academic research plugins for economics and finance: paper reading, documentation, review, and git workflows",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
   "owner": {
-    "name": "Julie Fu",
-    "email": "zhiyu.fu@example.com"
+    "name": "Julie Zhiyu Fu"
   },
   "plugins": [
     {
-      "name": "project-setup",
-      "description": "Create new research projects with two-folder architecture (Git repo + Dropbox share)",
-      "author": {
-        "name": "Julie Fu"
-      },
-      "source": "./plugins/project-setup",
-      "category": "research"
-    },
-    {
       "name": "zotero-connector",
+      "version": "0.3.0",
       "description": "Read and analyze academic papers from Zotero library",
       "author": {
         "name": "Julie Fu"
@@ -28,7 +20,7 @@
     },
     {
       "name": "pdf2markdown-converter",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
       "author": {
         "name": "Julie Fu"
@@ -38,7 +30,7 @@
     },
     {
       "name": "work-journal",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Working journal creation and documentation quality for academic research",
       "author": {
         "name": "Julie Fu"
@@ -48,7 +40,7 @@
     },
     {
       "name": "worktree-data-sync",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Sync non-git data between existing git worktrees",
       "author": {
         "name": "Julie Fu"
@@ -58,7 +50,7 @@
     },
     {
       "name": "review-doc-commit",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Review code, update documentation, and create well-organized topical git commits",
       "author": {
         "name": "Julie Fu"
@@ -68,7 +60,7 @@
     },
     {
       "name": "draft-reviewer",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
       "author": {
         "name": "Julie Zhiyu Fu"

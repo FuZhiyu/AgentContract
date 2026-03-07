@@ -1,8 +1,11 @@
 {
   "name": "draft-reviewer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
   "author": {
     "name": "Zhiyu Fu"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["research", "paper-review", "academic", "proofreading", "writing"]
 }

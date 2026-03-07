@@ -1,8 +1,11 @@
 {
   "name": "review-doc-commit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Review code, update documentation, and create well-organized topical git commits",
   "author": {
     "name": "Zhiyu Fu"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["git", "code-review", "documentation", "commits"]
 }

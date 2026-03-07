@@ -1,8 +1,11 @@
 {
   "name": "zotero-connector",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Read and analyze academic papers from Zotero library",
   "author": {
     "name": "Zhiyu Fu"
-  }
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["research", "zotero", "papers", "academic", "pdf"]
 }
