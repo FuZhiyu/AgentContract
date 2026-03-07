@@ -1,11 +1,11 @@
 ---
-name: work-summary
-description: Create factual work journal entries after completing analysis work. Use when user asks to "summarize work", "document results", or "create work journal entry". Ensures code is committed, copies figures to attachments, and creates objective summaries with citations.
+name: work-journal
+description: Create formal, fact-checked work journal entries after completing analysis work. Use when user asks to "summarize work", "document results", or "create work journal entry". Ensures code is committed, copies figures to attachments, and creates objective summaries with mandatory citations and report-checker verification. For quick reports without fact-checking, use the `report-in-markdown` skill.
 ---
 
-# Work Summary Skill
+# Work Journal Skill
 
-Create factual work journal entries that document completed analysis work without interpretation or recommendations.
+Create formal, fact-checked work journal entries that document completed analysis work without interpretation or recommendations. Every claim must be cited and verified by the report-checker agent.
 
 ## When to Use
 
@@ -39,9 +39,9 @@ git status
 ```
 
 **If uncommitted changes exist:**
-1. Inform user: "I see uncommitted changes. Should I run the code-quality-reviewer agent and commit the code first?"
+1. Inform user: "I see uncommitted changes. Should I run the code-reviewer agent and commit the code first?"
 2. Wait for user confirmation
-3. If confirmed, use Task tool with `subagent_type="code-quality-reviewer"` then assist with git commit
+3. If confirmed, use Task tool with `subagent_type="code-reviewer"` then assist with git commit
 4. Get commit info: `git log -1 --pretty=format:"%H%n%s"`
 
 **If clean:** Get latest commit: `git log -1 --pretty=format:"%H%n%s"`
@@ -65,14 +65,14 @@ If figures exist in output folder:
 mkdir -p "${WORK_JOURNAL_ATTACHMENTS_DIR}"
 ```
 
-**For PDF figures:** Convert to PNG first using the pdf-tools script, then copy:
+**For PDF figures:** Convert to PNG first, then copy:
 
 ```bash
-# Create a temp directory for conversion
-mkdir -p /tmp/pdf_convert
-python plugins/pdf-tools/scripts/convert_pdf_to_images.py Output/[subfolder]/figure.pdf /tmp/pdf_convert
-# Copy converted PNG(s) to attachments with descriptive names
-cp /tmp/pdf_convert/page_1.png "${WORK_JOURNAL_ATTACHMENTS_DIR}/YYYY-MM-DD-description.png"
+python -c "
+from pdf2image import convert_from_path
+images = convert_from_path('Output/[subfolder]/figure.pdf')
+images[0].save('${WORK_JOURNAL_ATTACHMENTS_DIR}/YYYY-MM-DD-description.png')
+"
 ```
 
 **For PNG/other image figures:** Copy directly:
@@ -100,9 +100,12 @@ One entry file at:
 ---
 author: "[[Author]]"
 date: YYYY-MM-DD
-project: "[[IntermediaryDemand]]"
+timestamp: "YYYY-MM-DDTHH:MM:SS"
+session_id: "[from context or session-YYYYMMDD-HHMMSS]"
+project: "[[ProjectName]]"
 git_commit: [full hash if available]
 git_message: "[message if available]"
+tags: ["work-journal"]
 permalink: working-journal/YYYY-MM-DD-author-description
 ---
 ```
@@ -164,7 +167,7 @@ Every claim must link to supporting evidence:
 
 ### 4. Figures
 
-- **PDF figures must be converted to PNG** before embedding (use `plugins/pdf-tools/scripts/convert_pdf_to_images.py`)
+- **PDF figures must be converted to PNG** before embedding (use `pdf2image` library)
 - Copy to attachments/ with descriptive filename
 - Cite original source location
 - Use descriptive captions

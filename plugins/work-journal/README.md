@@ -1,11 +1,22 @@
-# research-docs
+# work-journal
 
-Documentation quality review, summarization, and working journal creation for academic research.
+Working journal creation and markdown report generation for academic research.
 
 ## Skills
 
-### work-summary
-Create factual working journal entries with proper citations to code and output files.
+### work-journal
+Create formal, fact-checked work journal entries with proper citations to code and output files. Blocks on uncommitted changes, requires user confirmation, and runs the report-checker agent for verification. Use for documenting completed analysis work that needs to be accurate and well-cited.
+
+### report-in-markdown
+Pure IO tool for saving markdown reports. Handles file format, metadata frontmatter, naming, and placement. Content and style are determined entirely by the calling agent. No fact-checking, no tone rules, no blocking on uncommitted changes. Use for quick reports, session output, exploration notes, or any time an agent needs to persist markdown.
+
+| Aspect | `report-in-markdown` | `work-journal` |
+|--------|---------------------|----------------|
+| Role | IO tool | Formal workflow |
+| Content rules | None (caller decides) | Strict: factual, objective, cited |
+| Fact-checking | No (unless requested) | Mandatory (report-checker agent) |
+| Git state | Records dirty state, doesn't block | Blocks on uncommitted changes |
+| User confirmation | No | Yes |
 
 ## Agents
 
@@ -32,9 +43,14 @@ Creates comprehensive markdown summaries of analysis results with:
 
 ## Usage
 
-**Create working journal:**
-- "Create a work summary for today's analysis"
-- "Document what we did in this session"
+**Create formal work journal:**
+- "Create a work journal entry"
+- "Document the results"
+- "Summarize the work"
+
+**Save a quick report:**
+- "Save this as a report"
+- "Write up these findings"
 
 **Review code:**
 - Claude automatically spawns code-reviewer agent when reviewing research code
@@ -49,7 +65,9 @@ Creates comprehensive markdown summaries of analysis results with:
 
 ## Philosophy
 
-All documentation must be:
+Work journal entries must be:
 - **Factual** - No speculation or interpretation unless requested
 - **Cited** - Every claim links to supporting code or output
 - **Objective** - Present findings without subjective assessments
+
+Reports (via `report-in-markdown`) have no such constraints -- content rules are set by the calling agent.
