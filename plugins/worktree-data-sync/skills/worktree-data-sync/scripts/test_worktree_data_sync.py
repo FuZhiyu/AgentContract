@@ -522,3 +522,38 @@ class TestAnnotationCompatibility:
         annotations = worktree_data_discovery.parse_data_sync_annotations(repo)
         assert "data" in annotations
         assert "cache" in annotations
+
+
+class TestSafeJoinUnder:
+    """Tests for _safe_join_under path validation."""
+
+    def test_symlinked_directory_component(self, tmp_path):
+        """_safe_join_under should succeed when a directory component is a symlink pointing outside base."""
+        base = tmp_path / "worktree"
+        base.mkdir()
+        external = tmp_path / "external_data"
+        external.mkdir()
+        (external / "file.csv").write_text("data", encoding="utf-8")
+
+        # Create symlink: worktree/Data -> ../external_data
+        (base / "Data").symlink_to(external)
+
+        # Should succeed — logical path stays within base
+        result = sync_worktree_data._safe_join_under(base, Path("Data/file.csv"))
+        assert result == Path(base / "Data" / "file.csv").absolute()
+
+    def test_dotdot_traversal_rejected(self, tmp_path):
+        """_safe_join_under should reject .. traversal that escapes base."""
+        base = tmp_path / "worktree"
+        base.mkdir()
+
+        with pytest.raises(ValueError, match="escapes base root"):
+            sync_worktree_data._safe_join_under(base, Path("../etc/passwd"))
+
+    def test_normal_relative_path(self, tmp_path):
+        """_safe_join_under should accept a normal relative path."""
+        base = tmp_path / "worktree"
+        base.mkdir()
+
+        result = sync_worktree_data._safe_join_under(base, Path("src/main.py"))
+        assert result == Path(base / "src" / "main.py").absolute()

@@ -12,6 +12,7 @@ Python implementation of the worktree-data-sync skill.
 
 - `SeedSyncMode = Literal["auto", "force-symlink", "force-cow"]`
 - `symlink_missing_entry()` -- creates top-level symlinks for managed roots (used by `force-symlink` mode)
+- `_safe_join_under(base, relative)` -- joins a relative path under a base directory and validates the result stays within the base. Uses `os.path.abspath()` (not `Path.resolve()`) so that symlinked destination directories are accepted without resolving through to their physical location
 
 ## Progress Logging
 

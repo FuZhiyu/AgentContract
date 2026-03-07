@@ -471,9 +471,9 @@ def _normalize_user_relative_path(path_text: str) -> Path:
 
 
 def _safe_join_under(base: Path, relative: Path) -> Path:
-    base_resolved = base.resolve(strict=False)
-    joined = (base_resolved / relative).resolve(strict=False)
-    if not _is_within(base_resolved, joined):
+    base_abs = Path(os.path.abspath(base))
+    joined = Path(os.path.abspath(base_abs / relative))
+    if not _is_within(base_abs, joined):
         raise ValueError(f"Resolved path escapes base root: {joined}")
     return joined
 
