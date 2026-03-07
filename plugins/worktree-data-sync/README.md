@@ -56,6 +56,10 @@ Data/  # worktree:symlink
 
 `force-symlink` is intended for initial seeding and never replaces an existing destination root; conflicting paths are skipped.
 
+## Progress Output
+
+By default, seed, diff, and apply modes print per-entry progress to stderr (e.g., `Seeding [1/5] Data/ ...`). Use `--quiet` / `-q` to suppress this output. Structured output (JSON, summary reports) is always printed to stdout and is unaffected by `--quiet`.
+
 ## Examples
 
 ```bash

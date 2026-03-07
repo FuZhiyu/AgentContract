@@ -125,7 +125,7 @@ class TestSeedDiffApply:
         (target / "output" / "result.csv").write_text("local,keep\n", encoding="utf-8")
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        summary = sync_worktree_data.run_seed(entries, target)
+        summary = sync_worktree_data.run_seed(entries, target, verbose=False)
 
         assert summary.copied >= 1
         assert (target / "output" / "new.csv").exists()
@@ -138,7 +138,7 @@ class TestSeedDiffApply:
         target = repo_with_worktrees["a"]
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-cow")
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-cow", verbose=False)
 
         assert summary.copied >= 1
         assert (target / "data").is_dir()
@@ -150,7 +150,7 @@ class TestSeedDiffApply:
         target = repo_with_worktrees["a"]
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink", verbose=False)
 
         assert summary.symlinked >= 1
         assert (target / "data").is_symlink()
@@ -161,7 +161,7 @@ class TestSeedDiffApply:
         target = repo_with_worktrees["a"]
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink", verbose=False)
 
         assert summary.symlinked >= 1
         assert (target / "output").is_symlink()
@@ -175,7 +175,7 @@ class TestSeedDiffApply:
         (target / "output" / "local.txt").write_text("keep\n", encoding="utf-8")
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink", verbose=False)
 
         assert summary.skipped_existing >= 1
         assert (target / "output").is_dir()
@@ -195,6 +195,7 @@ class TestSeedDiffApply:
             target,
             include_unmodified=True,
             use_hash=True,
+            verbose=False,
         )
 
         assert any(change.status == "modified" for change in changes)
@@ -215,7 +216,7 @@ class TestSeedDiffApply:
         entries = worktree_data_discovery.discover_managed_entries(main)
         changes = [
             asdict(change)
-            for change in sync_worktree_data.collect_changes(entries, target, include_unmodified=False, use_hash=True)
+            for change in sync_worktree_data.collect_changes(entries, target, include_unmodified=False, use_hash=True, verbose=False)
         ]
 
         success, failure = sync_worktree_data.process_changes(changes, "overwrite", "_unused")
@@ -234,7 +235,7 @@ class TestSeedDiffApply:
         entries = worktree_data_discovery.discover_managed_entries(main)
         changes = [
             asdict(change)
-            for change in sync_worktree_data.collect_changes(entries, target, include_unmodified=False, use_hash=True)
+            for change in sync_worktree_data.collect_changes(entries, target, include_unmodified=False, use_hash=True, verbose=False)
         ]
 
         success, failure = sync_worktree_data.process_changes(changes, "rename", "_copy")
@@ -252,7 +253,7 @@ class TestSeedDiffApply:
         (target / "output" / "result.csv").write_text("old\n", encoding="utf-8")
 
         entries = worktree_data_discovery.discover_managed_entries(main)
-        changes = [asdict(change) for change in sync_worktree_data.collect_changes(entries, target, use_hash=True)]
+        changes = [asdict(change) for change in sync_worktree_data.collect_changes(entries, target, use_hash=True, verbose=False)]
 
         payload = {
             "from_worktree": str(main),

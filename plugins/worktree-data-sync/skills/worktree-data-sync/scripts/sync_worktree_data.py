@@ -105,6 +105,11 @@ def cow_copy_file(source_file: Path, destination_file: Path, dry_run: bool = Fal
             return False
 
 
+def _progress(message: str) -> None:
+    """Write a progress message to stderr."""
+    print(message, file=sys.stderr, flush=True)
+
+
 def copy_missing_tree(
     source_dir: Path,
     destination_dir: Path,
@@ -199,14 +204,19 @@ def run_seed(
     destination_root: Path,
     dry_run: bool = False,
     seed_sync_mode: SeedSyncMode = "auto",
+    verbose: bool = True,
 ) -> SeedSummary:
     """Materialize missing managed files into destination worktree."""
     summary = SeedSummary()
+    total = len(entries)
 
-    for entry in entries:
+    for idx, entry in enumerate(entries, 1):
         source_path = Path(entry["source"])
         destination_path = destination_root / entry["path"]
         entry_kind = entry.get("entry_kind", "directory")
+
+        if verbose:
+            _progress(f"  Seeding [{idx}/{total}] {entry['path']} ...")
 
         if seed_sync_mode == "auto" and entry.get("symlink_only", False):
             symlink_missing_entry(source_path, destination_path, summary, dry_run=dry_run)
@@ -371,15 +381,18 @@ def collect_changes(
     destination_root: Path,
     include_unmodified: bool = False,
     use_hash: bool = False,
+    verbose: bool = True,
 ) -> list[FileChange]:
     """Collect source->destination change records for managed entries."""
     all_changes: list[FileChange] = []
+    diffable = [e for e in entries if not e.get("symlink_only", False)]
+    total = len(diffable)
 
-    for entry in entries:
-        if entry.get("symlink_only", False):
-            continue
-
+    for idx, entry in enumerate(diffable, 1):
         entry_path = entry["path"]
+
+        if verbose:
+            _progress(f"  Scanning [{idx}/{total}] {entry_path} ...")
         source_path = Path(entry["source"])
         destination_item = destination_root / entry_path
         entry_kind = entry.get("entry_kind", "directory")
@@ -547,10 +560,18 @@ def process_changes(
     if status_filter:
         filtered = [change for change in filtered if change.get("status") in status_filter]
 
-    for change in filtered:
+    total = len(filtered)
+    for idx, change in enumerate(filtered, 1):
         source_path_value = change.get("source_path")
         if not source_path_value:
             raise ValueError("Each change record must include source_path")
+
+        if verbose and total > 1:
+            display = change.get("directory", "")
+            rel = change.get("relative_path")
+            if rel:
+                display = f"{display}/{rel}"
+            _progress(f"  Applying [{idx}/{total}] {display} ...")
 
         source_path = Path(source_path_value).resolve(strict=False)
         _validate_source_path(source_path, allowed_source_roots)
@@ -907,12 +928,15 @@ def main() -> None:
 
     entries = discover_managed_entries(source_root)
 
+    verbose = not args.quiet
+
     if args.mode == "seed":
         summary = run_seed(
             entries,
             destination_root,
             dry_run=args.dry_run,
             seed_sync_mode=args.seed_sync_mode,
+            verbose=verbose,
         )
         print(f"From: {source_root}")
         print(f"To:   {destination_root}")
@@ -930,6 +954,7 @@ def main() -> None:
             destination_root,
             include_unmodified=args.include_unmodified,
             use_hash=args.use_hash,
+            verbose=verbose,
         )
         if args.json:
             print(
@@ -952,8 +977,6 @@ def main() -> None:
         print("DRY RUN - no changes will be written\n")
 
     status_filter = set(args.status) if args.status else None
-    verbose = not args.quiet
-
     allowed_roots = _allowed_source_roots(entries)
 
     if args.interactive:
@@ -997,6 +1020,7 @@ def main() -> None:
                 destination_root,
                 include_unmodified=args.include_unmodified,
                 use_hash=args.use_hash,
+                verbose=verbose,
             )
         ]
         success, failure = process_changes(

@@ -90,9 +90,15 @@ Discovery is stateless and source-driven. Managed roots come from:
 - top-level symlink safety net
 - `.gitignore` symlink-only annotations
 
-Supported annotations:
-- preferred: `# data-sync:symlink`
-- legacy: `# worktree:symlink`
+Annotate a path as symlink-only by adding a **duplicate line** with the tag comment:
+
+```gitignore
+Data/
+Data/  # data-sync:symlink
+```
+
+The first line is the actual gitignore rule; the second is the annotation the discovery script parses.
+Legacy tag `# worktree:symlink` is also supported.
 
 Symlink-only roots are symlinked in seed auto mode and excluded from diff/apply actions.
 
