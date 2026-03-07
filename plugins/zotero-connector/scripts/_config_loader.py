@@ -1,9 +1,9 @@
 """
-Minimal config loader for econ-research plugins (self-contained copy).
+Minimal config loader for agent-contract plugins (self-contained copy).
 
 Lookup order:
-1. .claude/econ-research.yaml (project-specific)
-2. ~/.config/econ-research/config.yaml (global fallback)
+1. .claude/agent-contract.yaml (project-specific)
+2. ~/.config/agent-contract/config.yaml (global fallback)
 """
 
 from pathlib import Path
@@ -14,8 +14,8 @@ try:
 except ImportError:
     yaml = None
 
-_PROJECT_CONFIG = Path(".claude") / "econ-research.yaml"
-_GLOBAL_CONFIG = Path.home() / ".config" / "econ-research" / "config.yaml"
+_PROJECT_CONFIG = Path(".claude") / "agent-contract.yaml"
+_GLOBAL_CONFIG = Path.home() / ".config" / "agent-contract" / "config.yaml"
 
 
 def load_config(plugin_name: str | None = None) -> dict[str, Any]:

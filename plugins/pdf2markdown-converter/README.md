@@ -7,7 +7,7 @@ Convert PDFs to Markdown using the Mistral OCR API with automatic image extracti
 - [`uv`](https://docs.astral.sh/uv/) (dependencies auto-install via PEP 723 inline metadata)
 - **Mistral API key** — provide via one of:
   1. Environment variable: `export MISTRAL_API_KEY=your-key`
-  2. Config file: `.claude/econ-research.yaml` → `paper-reader.mistral_api_key`
+  2. Config file: `.claude/agent-contract.yaml` → `paper-reader.mistral_api_key`
   3. `Notes/.env` file: `MISTRAL_API_KEY=your-key`
 
 ## Install

@@ -14,7 +14,26 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(chmod:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(while read f)",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//Users/zhiyufu/Library/CloudStorage/Dropbox/package_dev/EconResearchPlugins/**)",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "WebFetch(domain:developers.openai.com)",
+      "WebFetch(domain:peps.python.org)",
+      "WebFetch(domain:www.robert-glaser.de)",
+      "WebFetch(domain:docs.astral.sh)",
+      "Bash(do:*)",
+      "Bash(ln:*)",
+      "Bash(gh repo rename AgentContract --yes)",
+      "Bash(gh repo view FuZhiyu/EconResearchPlugins --json name)",
+      "Bash(gh repo view FuZhiyu/AgentContract --json name)",
+      "Bash(gh auth status)",
+      "Bash(gh repo:*)",
+      "Bash(git:*)"
     ]
   }
 }

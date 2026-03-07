@@ -19,7 +19,7 @@ Say something like:
 
 ## Configuration
 
-Add to `.claude/econ-research.yaml`:
+Add to `.claude/agent-contract.yaml`:
 
 ```yaml
 project-setup:

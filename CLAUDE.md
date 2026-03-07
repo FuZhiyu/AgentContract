@@ -14,7 +14,7 @@ plugins/           # Individual plugins, each with its own .claude-plugin/
   ├── draft-reviewer/
   └── review-doc-commit/
 shared/            # Shared utilities (canonical reference; each plugin carries its own copy)
-  └── config.py    # Config loader for .claude/econ-research.yaml
+  └── config.py    # Config loader for .claude/agent-contract.yaml
 ```
 
 ## Conventions
@@ -97,7 +97,7 @@ claude /plugin install ./plugins/plugin-name
 
 ### Shared Config
 
-Plugins read config from `.claude/econ-research.yaml` (project) or `~/.config/econ-research/config.yaml` (global). Each plugin uses its own `_config_loader.py` copy:
+Plugins read config from `.claude/agent-contract.yaml` (project) or `~/.config/agent-contract/config.yaml` (global). Each plugin uses its own `_config_loader.py` copy:
 
 ```python
 from _config_loader import load_config

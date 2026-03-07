@@ -43,7 +43,7 @@ def load_api_key():
 
     Resolution order:
     1. Environment variable MISTRAL_API_KEY (e.g., from secrets.sh)
-    2. Shared config (.claude/econ-research.yaml or ~/.config/econ-research/config.yaml)
+    2. Shared config (.claude/agent-contract.yaml or ~/.config/agent-contract/config.yaml)
     3. Notes/.env file (Dropbox-synced, convenient for teams)
     """
     # 1. Environment variable
@@ -70,7 +70,7 @@ def load_api_key():
     raise ValueError(
         "Mistral API key not found. Supply it via one of:\n"
         "  1. Environment variable: export MISTRAL_API_KEY=your-key (e.g., in secrets.sh)\n"
-        "  2. Config file: .claude/econ-research.yaml (paper-reader.mistral_api_key)\n"
+        "  2. Config file: .claude/agent-contract.yaml (paper-reader.mistral_api_key)\n"
         "  3. Notes/.env: MISTRAL_API_KEY=your-key (Dropbox-synced for teams)"
     )
 

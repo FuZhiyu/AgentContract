@@ -76,7 +76,7 @@ The script requires:
 The script checks these locations in order (first match wins):
 
 1. **Environment variable** `MISTRAL_API_KEY` — recommended for personal use (e.g., add `export MISTRAL_API_KEY=your-key` to `secrets.sh`)
-2. **Shared config** — `.claude/econ-research.yaml` or `~/.config/econ-research/config.yaml` under `paper-reader.mistral_api_key`
+2. **Shared config** — `.claude/agent-contract.yaml` or `~/.config/agent-contract/config.yaml` under `paper-reader.mistral_api_key`
 3. **`Notes/.env`** — add `MISTRAL_API_KEY=your-key`. This file is gitignored but Dropbox-synced, making it convenient for teams sharing a project folder
 
 > **Never commit API keys to git.** Use environment variables or Dropbox-synced `Notes/.env` instead.

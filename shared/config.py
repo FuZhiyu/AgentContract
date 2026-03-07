@@ -1,9 +1,9 @@
 """
-Unified configuration loader for econ-research plugins.
+Unified configuration loader for agent-contract plugins.
 
 Lookup order:
-1. .claude/econ-research.yaml (project-specific)
-2. ~/.config/econ-research/config.yaml (global fallback)
+1. .claude/agent-contract.yaml (project-specific)
+2. ~/.config/agent-contract/config.yaml (global fallback)
 """
 
 import os
@@ -16,9 +16,9 @@ except ImportError:
     yaml = None
 
 
-CONFIG_FILENAME = "econ-research.yaml"
+CONFIG_FILENAME = "agent-contract.yaml"
 PROJECT_CONFIG_PATH = Path(".claude") / CONFIG_FILENAME
-GLOBAL_CONFIG_PATH = Path.home() / ".config" / "econ-research" / "config.yaml"
+GLOBAL_CONFIG_PATH = Path.home() / ".config" / "agent-contract" / "config.yaml"
 
 
 def get_config_path() -> Path | None:

@@ -85,7 +85,7 @@ Inform the user:
 
 ## Configuration
 
-The plugin reads from `.claude/econ-research.yaml` or `~/.config/econ-research/config.yaml`:
+The plugin reads from `.claude/agent-contract.yaml` or `~/.config/agent-contract/config.yaml`:
 
 ```yaml
 project-setup:

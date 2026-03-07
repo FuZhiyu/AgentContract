@@ -7,7 +7,7 @@ Read and analyze academic papers from your Zotero library. Searches by title/aut
 - **Zotero API key** — get one at https://www.zotero.org/settings/keys
 - **Zotero library ID** — your numeric user/group ID
 
-Provide via `.claude/econ-research.yaml` or `~/.config/econ-research/config.yaml`:
+Provide via `.claude/agent-contract.yaml` or `~/.config/agent-contract/config.yaml`:
 
 ```yaml
 paper-reader:

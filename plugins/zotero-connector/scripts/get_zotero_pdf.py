@@ -52,7 +52,7 @@ def get_api_key():
     """
     Read Zotero API key from config.
 
-    Tries shared config first (.claude/econ-research.yaml),
+    Tries shared config first (.claude/agent-contract.yaml),
     then falls back to legacy Notes/.env file.
 
     Returns:
@@ -76,14 +76,14 @@ def get_api_key():
                 if line.startswith("ZOTERO_API_KEY="):
                     return line.split("=", 1)[1]
 
-    print("Error: ZOTERO_API_KEY not found. Configure in .claude/econ-research.yaml or Notes/.env", file=sys.stderr)
+    print("Error: ZOTERO_API_KEY not found. Configure in .claude/agent-contract.yaml or Notes/.env", file=sys.stderr)
     return None
 
 def get_library_config():
     """
     Read library configuration.
 
-    Tries shared config first (.claude/econ-research.yaml),
+    Tries shared config first (.claude/agent-contract.yaml),
     then falls back to legacy Notes/.env file.
 
     Returns:
@@ -101,7 +101,7 @@ def get_library_config():
     # Fall back to legacy .env file
     env_file = Path("Notes/.env")
     if not env_file.exists():
-        print("Error: Config not found. Configure in .claude/econ-research.yaml or Notes/.env", file=sys.stderr)
+        print("Error: Config not found. Configure in .claude/agent-contract.yaml or Notes/.env", file=sys.stderr)
         return None, None
 
     library_type = "user"  # default

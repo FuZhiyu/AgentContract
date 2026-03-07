@@ -1,17 +1,17 @@
 # AgentContract
 
-A Claude Code plugin marketplace for academic research workflows.
+Skills and agents designed for academic research workflows, econ-flavored. Made by Claude, for Claude. For Codex, see below for installation instructions. 
 
-## Available Plugins
+## Available Skills
 
-| Plugin | Description |
+| Skills | Description |
 |--------|-------------|
+| `worktree-data-sync` | multi-agent work in parallel in different worktrees with isolated data |
+| `work-journal` | Teach agents how to document and report the results |
+| `draft-reviewer` | Comprehensive review of a paper draft. Even better, it can fixes things |
+| `review-doc-commit` | Make sure we commit the right stuff |
 | `zotero-connector` | Read papers from Zotero library |
 | `pdf2markdown-converter` | Convert PDFs to markdown via Mistral OCR |
-| `work-journal` | Formal work journal entries and markdown report IO |
-| `worktree-data-sync` | Sync non-git data across existing worktrees |
-| `draft-reviewer` | Multi-agent academic paper review |
-| `review-doc-commit` | Review code, update docs, and create topical commits |
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ A Claude Code plugin marketplace for academic research workflows.
 
 ## Configuration
 
-Create `.claude/econ-research.yaml` (per-project) or `~/.config/econ-research/config.yaml` (global):
+Create `.claude/agent-contract.yaml` (per-project) or `~/.config/agent-contract/config.yaml` (global):
 
 ```yaml
 paper-reader:
