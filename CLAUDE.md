@@ -71,6 +71,10 @@ tools: [Read, Grep, Glob, Bash]
 - Prefer Python for complex logic, bash for simple file operations
 - Scripts should be executable (`chmod +x`)
 - Python scripts with external dependencies use PEP 723 inline metadata + `#!/usr/bin/env -S uv run --script` shebang for self-installing deps
+- **SKILL.md invocations:**
+  - Scripts with external deps: `uv run python scripts/script.py` (lets `uv` resolve PEP 723 deps)
+  - Scripts without external deps: `python3 scripts/script.py`
+  - Inline one-liners needing external packages: `uv run --with <pkg> python -c "..."`
 - Use `${CLAUDE_PLUGIN_ROOT}` to reference plugin directory
 - Each plugin carries its own `_config_loader.py` (do NOT use `sys.path` hacks to reach `shared/`)
 

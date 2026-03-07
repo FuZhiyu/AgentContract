@@ -50,9 +50,7 @@ Read config from shared config loader to get:
 - `default_share_location`: Where to create projects
 
 ```python
-import sys
-sys.path.insert(0, "${CLAUDE_PLUGIN_ROOT}/../../shared")
-from config import load_config
+from _config_loader import load_config
 
 config = load_config('project-setup')
 template_path = config.get('template_path')

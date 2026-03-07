@@ -69,7 +69,7 @@ mkdir -p "${WORK_JOURNAL_ATTACHMENTS_DIR}"
 **For PDF figures:** Convert to PNG first, then copy:
 
 ```bash
-python -c "
+uv run --with pdf2image python -c "
 from pdf2image import convert_from_path
 images = convert_from_path('Output/[subfolder]/figure.pdf')
 images[0].save('${WORK_JOURNAL_ATTACHMENTS_DIR}/YYYY-MM-DD-description.png')
@@ -121,12 +121,14 @@ permalink: working-journal/YYYY-MM-DD-author-description
 - Results with tables/figures
 - Technical implementation details (code and outputs)
 
-**Use paths relative to the resolved `WORK_JOURNAL_DIR`:**
-- Do not hardcode path depth.
-- Build links relative to the report location and the actual project layout.
-- Follow project guidelines if they specify citation/link style.
+**File references:** When mentioning files (scripts, outputs, figures, tables), always create markdown links with paths resolved relative to the report file's location. Do not use bare paths.
 
-If no project guideline exists, use clear repo-relative links that resolve from the report location.
+**Example:** If the report is at `notes/2026-03-07-report-analysis.md` and the referenced file is at `code/BOP/clean_data.py`:
+
+- **Wrong:** `code/BOP/clean_data.py`
+- **Correct:** [`code/BOP/clean_data.py`](../code/BOP/clean_data.py)
+
+Compute the relative path from the markdown file's directory to the target file using `../` as needed.
 
 ## Critical Rules - MUST FOLLOW
 

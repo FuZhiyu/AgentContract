@@ -21,11 +21,11 @@ Use the conversion script from this skill's directory:
 
 ```bash
 # Convert entire PDF
-python scripts/convert_pdf_to_markdown.py input.pdf output.md
+uv run python scripts/convert_pdf_to_markdown.py input.pdf output.md
 
 # Convert specific pages
-python scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1-5"
-python scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1,3,5"
+uv run python scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1-5"
+uv run python scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1,3,5"
 ```
 
 ## Output Structure
@@ -47,7 +47,7 @@ import subprocess
 
 # Run conversion script
 result = subprocess.run([
-    "python",
+    "uv", "run", "python",
     ".claude/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py",
     "input.pdf",
     "Output/PDFConversions/output.md",
@@ -85,7 +85,7 @@ The script checks these locations in order (first match wins):
 
 ### Convert Research Paper
 ```bash
-python scripts/convert_pdf_to_markdown.py \
+uv run python scripts/convert_pdf_to_markdown.py \
   "Data/papers/research.pdf" \
   "Notes/Paper Markdown/research.md"
 ```
@@ -93,7 +93,7 @@ python scripts/convert_pdf_to_markdown.py \
 ### Extract Specific Sections
 ```bash
 # Extract pages 10-20 (introduction and methods)
-python scripts/convert_pdf_to_markdown.py \
+uv run python scripts/convert_pdf_to_markdown.py \
   "paper.pdf" \
   "Notes/Paper Markdown/intro_methods.md" \
   --pages "10-20"
@@ -102,7 +102,7 @@ python scripts/convert_pdf_to_markdown.py \
 ### Extract Figures Only
 ```bash
 # Extract pages with figures
-python scripts/convert_pdf_to_markdown.py \
+uv run python scripts/convert_pdf_to_markdown.py \
   "paper.pdf" \
   "Notes/Paper Markdown/figures.md" \
   --pages "25,27,30,35"

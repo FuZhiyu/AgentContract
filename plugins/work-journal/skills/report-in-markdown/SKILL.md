@@ -1,12 +1,10 @@
 ---
 name: report-in-markdown
-description: Save a markdown report to the project's notes directory. Pure IO tool -- handles file format, metadata frontmatter, and placement. Content is provided by the calling agent. Use when agent needs to persist a report, document progress, or save session output.
+description: Report back to the user in a well-formatted markdown file for readability. Use this skill PROACTIVELY when the output is lengthy or refers to figures/tables/or latex math, or when users request a markdown report.
 user-invocable: true
 ---
 
 # Report in Markdown
-
-Pure IO skill for writing markdown reports to disk. Defines the file format contract (frontmatter, naming, placement) but imposes no content or style rules -- the calling agent decides what to write and how.
 
 ## Proactive Use
 
@@ -19,7 +17,7 @@ Agents should use this skill proactively when output would be lengthy, especiall
 Check project guidance (`AGENTS.md`, `CLAUDE.md`, project README, `.claude/` docs) for a documentation path.
 
 1. If project guidance specifies a location, use it.
-2. Otherwise, fall back to `./scratch/` (create if needed). Use `scratch/` for transient agent output, not `notes/`.
+2. Otherwise, fall back to `./scratch/` (create if needed). Use `scratch/` for transient agent output.
 
 Define:
 - `REPORT_DIR` = resolved directory
@@ -47,7 +45,7 @@ Session ID: use context if available, otherwise generate `session-YYYYMMDD-HHMMS
 **Frontmatter:**
 ```yaml
 ---
-author: "[[Author]]"
+author: "[[UserName]]"
 date: YYYY-MM-DD
 timestamp: "YYYY-MM-DDTHH:MM:SS"
 session_id: "[from context or session-YYYYMMDD-HHMMSS]"
@@ -83,7 +81,7 @@ When the caller's content includes figures:
 
 2. **PDF figures:** Convert to PNG first, then copy:
    ```bash
-   python -c "
+   uv run --with pdf2image python -c "
    from pdf2image import convert_from_path
    images = convert_from_path('path/to/figure.pdf')
    images[0].save('${REPORT_ATTACHMENTS_DIR}/description.png')
@@ -108,11 +106,13 @@ When the caller's content includes figures:
 - **Display math:** `$$...$$`
 - **Figures:** Copy to `attachments/` subfolder relative to the markdown file's directory. Embed with `![caption](./attachments/filename.png)`. Cite the original source path.
 
-## What This Skill Does NOT Specify
+## File References
 
-- No tone rules (informal, formal -- up to caller)
-- No content structure requirements
-- No citation requirements
-- No fact-checking step (caller can explicitly request report-checker agent if desired)
-- Does not block on uncommitted changes -- just records `git_dirty`
-- No user confirmation step
+When mentioning files (scripts, outputs, figures, tables), always create markdown links with paths resolved relative to the report file's location. Do not use bare paths.
+
+**Example:** If the report is at `notes/2026-03-07-report-analysis.md` and the referenced file is at `code/BOP/clean_data.py`:
+
+- **Wrong:** `code/BOP/clean_data.py`
+- **Correct:** [`code/BOP/clean_data.py`](../code/BOP/clean_data.py)
+
+Compute the relative path from the markdown file's directory to the target file using `../` as needed.
