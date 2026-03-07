@@ -11,13 +11,12 @@ import os
 import subprocess
 from pathlib import Path
 
-# Add shared config loader to path
+# Config loader: use local copy (works when installed as plugin)
 SCRIPT_DIR = Path(__file__).parent
-SHARED_DIR = SCRIPT_DIR.parents[4] / "shared"
-sys.path.insert(0, str(SHARED_DIR))
+sys.path.insert(0, str(SCRIPT_DIR))
 
 try:
-    from config import get_zotero_config
+    from _config_loader import get_zotero_config
     USE_SHARED_CONFIG = True
 except ImportError:
     USE_SHARED_CONFIG = False

@@ -39,7 +39,7 @@ class AgentSource:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Install Codex skills from EconResearchPlugins."
+        description="Install Codex skills from AgentContract."
     )
     parser.add_argument(
         "--repo-root",
@@ -71,9 +71,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=("symlink", "copy"),
-        default="symlink",
-        help="Install mode for skill directories (default: symlink).",
+        choices=("copy", "symlink"),
+        default="copy",
+        help="Install mode for skill directories (default: copy). Use symlink for local development.",
     )
     parser.add_argument(
         "--force",

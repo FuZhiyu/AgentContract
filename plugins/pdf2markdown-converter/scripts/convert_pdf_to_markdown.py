@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "mistralai",
+#     "pypdf",
+#     "python-dotenv",
+#     "pyyaml",
+# ]
+# ///
 """
 Convert PDF to Markdown using Mistral OCR API.
 
@@ -8,21 +17,21 @@ Usage:
 
 import argparse
 import base64
+import io
 import os
 import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 from mistralai import Mistral
 from pypdf import PdfReader, PdfWriter
-import io
 
-# Add shared config loader to path
+# Config loader: use local copy (works when installed as plugin)
 SCRIPT_DIR = Path(__file__).parent
-SHARED_DIR = SCRIPT_DIR.parents[4] / "shared"
-sys.path.insert(0, str(SHARED_DIR))
+sys.path.insert(0, str(SCRIPT_DIR))
 
 try:
-    from config import get_mistral_api_key
+    from _config_loader import get_mistral_api_key
     USE_SHARED_CONFIG = True
 except ImportError:
     USE_SHARED_CONFIG = False
