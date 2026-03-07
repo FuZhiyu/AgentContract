@@ -94,9 +94,13 @@ paper-reader:
 - Hard gate: no commit until review is clean
 - Group changes into topical commits
 
-## For Codex CLI Users
+## Codex
 
-Ask Codex to read [CODEX_INSTALL.md](CODEX_INSTALL.md) for installation instructions.
+Tell Codex:
+
+> Fetch and follow instructions from https://raw.githubusercontent.com/FuZhiyu/AgentContract/main/CODEX_INSTALL.md
+
+Detailed docs: [CODEX_INSTALL.md](CODEX_INSTALL.md)
 
 ## License
 
