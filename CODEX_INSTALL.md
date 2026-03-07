@@ -80,8 +80,8 @@ Proceed?
 ### If an Agent Needs to Fetch the Repo First
 
 ```bash
-git clone <REPO_URL> EconResearchPlugins
-cd EconResearchPlugins
+git clone <REPO_URL> AgentContract
+cd AgentContract
 python3 scripts/install_codex_skills.py --list --json > /tmp/codex_plugin_inventory.json
 ```
 
@@ -94,7 +94,7 @@ python3 scripts/install_codex_skills.py --scope project
 Suggested agent instruction:
 
 ```text
-Clone the EconResearchPlugins repo, run:
+Clone the AgentContract repo, run:
 python3 scripts/install_codex_skills.py --list --json
 Use that discovered inventory (plugins/skills/agents) as the source of truth,
 then run installation with --scope project.
@@ -111,7 +111,7 @@ python3 scripts/install_codex_skills.py --scope project
 
 This will:
 
-1. Install skills to `./.agents/skills/` (symlink mode by default)
+1. Install skills to `./.agents/skills/` (copy mode by default)
 2. Install agent role TOML files to `./.codex/agents/`
 3. Create/update `./.codex/config.toml`
 4. Append missing `[[skills.config]]` entries idempotently
@@ -160,7 +160,7 @@ Targets:
 
 ### Useful flags
 
-- `--mode copy` to copy instead of symlink
+- `--mode symlink` for local development (live updates from repo checkout)
 - `--force` to replace existing installed skills
 - `--update` same as `--force` (remove and reinstall existing skills/roles)
 - `--dry-run` to preview actions

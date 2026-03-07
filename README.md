@@ -1,4 +1,4 @@
-# Econ Research Plugins
+# AgentContract
 
 A Claude Code plugin marketplace for academic research workflows.
 
@@ -6,7 +6,6 @@ A Claude Code plugin marketplace for academic research workflows.
 
 | Plugin | Description |
 |--------|-------------|
-| `project-setup` | Create research projects with two-folder architecture |
 | `zotero-connector` | Read papers from Zotero library |
 | `pdf2markdown-converter` | Convert PDFs to markdown via Mistral OCR |
 | `work-journal` | Formal work journal entries and markdown report IO |
@@ -14,22 +13,40 @@ A Claude Code plugin marketplace for academic research workflows.
 | `draft-reviewer` | Multi-agent academic paper review |
 | `review-doc-commit` | Review code, update docs, and create topical commits |
 
+## Prerequisites
+
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+- [`uv`](https://docs.astral.sh/uv/) — Python scripts use PEP 723 inline metadata for auto-installing dependencies
+- API keys per plugin (see individual plugin docs)
+
 ## Installation
 
-### Register Marketplace
+### From GitHub
 
 ```bash
-claude /plugin marketplace add /path/to/EconResearchPlugins
+# Add marketplace
+claude /plugin marketplace add FuZhiyu/AgentContract
 
-# Install plugins by name
-claude /plugin install zotero-connector@econ-research-plugins
-claude /plugin install work-journal@econ-research-plugins
+# Install individual plugins
+claude /plugin install zotero-connector@agent-contract
+claude /plugin install pdf2markdown-converter@agent-contract
+claude /plugin install work-journal@agent-contract
 ```
 
-### Direct Installation
+### Direct Installation (local development)
 
 ```bash
-claude /plugin install /path/to/EconResearchPlugins/plugins/zotero-connector
+claude /plugin install ./plugins/zotero-connector
+```
+
+## Updating Plugins
+
+```bash
+# Update a single plugin
+claude plugin update zotero-connector@agent-contract
+
+# Update all plugins from this marketplace
+claude /plugin marketplace update agent-contract
 ```
 
 ## Configuration
@@ -42,29 +59,21 @@ paper-reader:
   zotero_api_key: "..."
   zotero_library_type: "user"
   zotero_library_id: "12345"
-
-project-setup:
-  template_path: "/path/to/ResearchProjectTemplate"
-  default_share_location: "~/Dropbox/package_dev"
 ```
 
 ## Plugin Details
-
-### project-setup
-Creates new research projects with:
-- Git repo for code, figures, tables, papers
-- Dropbox folder for notes, data, outputs
-- Python environment, Claude agents
 
 ### zotero-connector
 - Search Zotero by title/author/topic
 - Download PDFs from local storage or web API
 - Integrates with pdf2markdown-converter
+- **Requires:** Zotero API key, library ID
 
 ### pdf2markdown-converter
 - Convert PDFs to markdown using Mistral OCR
 - Extract images to separate folder
 - Great for scanned documents
+- **Requires:** Mistral API key
 
 ### work-journal
 - `work-journal` skill: formal, fact-checked journal entries with citations and report-checker verification
@@ -88,3 +97,10 @@ Creates new research projects with:
 - Hard gate: no commit until review is clean
 - Group changes into topical commits
 
+## For Codex CLI Users
+
+See [CODEX_INSTALL.md](CODEX_INSTALL.md) for installation instructions with OpenAI Codex.
+
+## License
+
+[MIT](LICENSE)

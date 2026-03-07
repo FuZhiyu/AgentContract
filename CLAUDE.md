@@ -1,4 +1,4 @@
-# EconResearchPlugins
+# AgentContract
 
 A Claude Code plugin marketplace providing tools for academic research workflows. Each plugin is self-contained and can be installed independently.
 
@@ -6,14 +6,14 @@ A Claude Code plugin marketplace providing tools for academic research workflows
 
 ```
 plugins/           # Individual plugins, each with its own .claude-plugin/
-  ├── project-setup/
+  ├── project-setup/       (not in marketplace yet)
   ├── zotero-connector/
   ├── pdf2markdown-converter/
   ├── work-journal/
   ├── worktree-data-sync/
   ├── draft-reviewer/
   └── review-doc-commit/
-shared/            # Shared utilities used across plugins
+shared/            # Shared utilities (canonical reference; each plugin carries its own copy)
   └── config.py    # Config loader for .claude/econ-research.yaml
 ```
 
@@ -32,6 +32,7 @@ plugin-name/
 │       └── references/  # Supporting files
 ├── agents/              # Subagent definitions (optional)
 ├── scripts/             # Executable scripts (bash, python)
+│   └── _config_loader.py  # Self-contained config loader (copy of shared/config.py)
 └── hooks/               # Hook scripts (optional)
 ```
 
@@ -50,6 +51,17 @@ user-invocable: true  # Set false for internal-only skills
 - Skill names should describe the action (e.g., `work-journal`, `draft-review`)
 - Agent names use kebab-case with descriptive suffixes (e.g., `mathematical-reviewer`)
 
+### Agent Frontmatter
+
+Agent markdown files require YAML frontmatter:
+```yaml
+---
+name: agent-name
+description: What this agent does
+tools: [Read, Grep, Glob, Bash]
+---
+```
+
 ### Subagent Types
 - Register subagents as `plugin-name:agent-name` (e.g., `draft-reviewer:mathematical-reviewer`)
 - Define agent instructions in `agents/agent-name.md` for standalone reusable agents
@@ -58,43 +70,50 @@ user-invocable: true  # Set false for internal-only skills
 ### Scripts
 - Prefer Python for complex logic, bash for simple file operations
 - Scripts should be executable (`chmod +x`)
+- Python scripts with external dependencies use PEP 723 inline metadata + `#!/usr/bin/env -S uv run --script` shebang for self-installing deps
 - Use `${CLAUDE_PLUGIN_ROOT}` to reference plugin directory
+- Each plugin carries its own `_config_loader.py` (do NOT use `sys.path` hacks to reach `shared/`)
 
 ## Development
 
 ### Creating a New Plugin
 
 1. Create directory under `plugins/`
-2. Add `.claude-plugin/plugin.json` with name, description, author
+2. Add `.claude-plugin/plugin.json` with name, description, author, license, repository, keywords
 3. Add skills in `skills/skill-name/SKILL.md`
+4. If the plugin has Python scripts with external deps, add PEP 723 metadata
+5. Copy `shared/config.py` as `scripts/_config_loader.py` if config access is needed
+
+### Releasing Changes
+
+Always bump `version` in plugin.json before pushing. Claude Code caches by version — unchanged versions won't update for users. Also bump the marketplace version in `.claude-plugin/marketplace.json`.
 
 ### Testing
 
 Install locally:
 ```bash
-claude /plugin install /path/to/EconResearchPlugins/plugins/plugin-name
+claude /plugin install ./plugins/plugin-name
 ```
 
 ### Shared Config
 
-Plugins read config from `.claude/econ-research.yaml` (project) or `~/.config/econ-research/config.yaml` (global):
+Plugins read config from `.claude/econ-research.yaml` (project) or `~/.config/econ-research/config.yaml` (global). Each plugin uses its own `_config_loader.py` copy:
 
 ```python
-import sys
-sys.path.insert(0, "${CLAUDE_PLUGIN_ROOT}/../../shared")
-from config import load_config
-
+from _config_loader import load_config
 config = load_config('plugin-name')
 ```
+
+The canonical reference is `shared/config.py`. When updating config logic, sync changes to each plugin's `scripts/_config_loader.py`.
 
 ## Key Plugins
 
 | Plugin | Type | Description |
 |--------|------|-------------|
-| `project-setup` | Skill | Creates two-folder research project structure |
 | `zotero-connector` | Skill | Read papers from Zotero library |
 | `pdf2markdown-converter` | Skill | Convert PDFs to markdown via Mistral OCR |
 | `work-journal` | Skills + Agents | Formal work journal entries and markdown report IO |
 | `draft-reviewer` | Skill + Agents | Multi-agent paper review system |
 | `review-doc-commit` | Skill + Agents | Parallel review, documentation, and topical git commits |
 | `worktree-data-sync` | Skill | Sync non-git data across existing worktrees |
+| `project-setup` | Skill | Creates two-folder research project structure (not in marketplace yet) |
