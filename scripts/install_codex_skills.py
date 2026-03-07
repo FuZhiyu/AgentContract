@@ -42,10 +42,23 @@ def parse_args() -> argparse.Namespace:
         description="Install Codex skills from AgentContract."
     )
     parser.add_argument(
+        "--source-repo",
+        type=Path,
+        default=None,
+        help="AgentContract repo containing plugins/ directory (default: current directory).",
+    )
+    parser.add_argument(
         "--repo-root",
         type=Path,
+        default=None,
+        dest="repo_root_deprecated",
+        help="Deprecated alias for --source-repo.",
+    )
+    parser.add_argument(
+        "--target-root",
+        type=Path,
         default=Path.cwd(),
-        help="Repository root (default: current directory).",
+        help="Target project root for project-scoped installs (default: current directory).",
     )
     parser.add_argument(
         "--plugins",
@@ -527,19 +540,41 @@ def main() -> int:
     args = parse_args()
     if args.update:
         args.force = True
-    repo_root = args.repo_root.resolve()
+
+    # Resolve --repo-root (deprecated) → --source-repo
+    if args.repo_root_deprecated is not None:
+        print(
+            "[warn] --repo-root is deprecated; use --source-repo instead.",
+            file=sys.stderr,
+        )
+        if args.source_repo is not None:
+            print(
+                "[warn] Both --source-repo and --repo-root provided; ignoring --repo-root.",
+                file=sys.stderr,
+            )
+        else:
+            args.source_repo = args.repo_root_deprecated
+    if args.source_repo is None:
+        args.source_repo = Path.cwd()
+    source_repo = args.source_repo.resolve()
+    target_root = args.target_root.resolve()
 
     try:
-        all_sources = find_skill_sources(repo_root)
-        all_agent_sources = find_agent_sources(repo_root)
+        all_sources = find_skill_sources(source_repo)
+        all_agent_sources = find_agent_sources(source_repo)
     except Exception as exc:
-        print(f"Error discovering skills: {exc}", file=sys.stderr)
+        print(
+            f"Error discovering skills: {exc}\n"
+            "--source-repo must point to the AgentContract repo containing plugins/. "
+            "If installing into another project, set --target-root to the target project directory.",
+            file=sys.stderr,
+        )
         return 1
 
     if args.list:
         if args.json:
             payload = {
-                "repo_root": str(repo_root),
+                "source_repo": str(source_repo),
                 "plugins": sorted({src.plugin_name for src in all_sources} | {a.plugin_name for a in all_agent_sources}),
                 "skills": [
                     {
@@ -602,14 +637,14 @@ def main() -> int:
     if args.skills_dir:
         skills_dir = args.skills_dir.expanduser().resolve()
     elif args.scope == "project":
-        skills_dir = (repo_root / ".agents" / "skills").resolve()
+        skills_dir = (target_root / ".agents" / "skills").resolve()
     else:
         skills_dir = (Path.home() / ".agents" / "skills").resolve()
 
     if args.config_file:
         config_file = args.config_file.expanduser().resolve()
     elif args.scope == "project":
-        config_file = (repo_root / ".codex" / "config.toml").resolve()
+        config_file = (target_root / ".codex" / "config.toml").resolve()
     else:
         config_file = (Path.home() / ".codex" / "config.toml").resolve()
 
@@ -618,7 +653,9 @@ def main() -> int:
     else:
         agents_dir = (config_file.parent / "agents").resolve()
 
-    print(f"[info] Repo root:    {repo_root}")
+    print(f"[info] Source repo:  {source_repo}")
+    if args.scope == "project":
+        print(f"[info] Target root:  {target_root}")
     print(f"[info] Scope:        {args.scope}")
     print(f"[info] Skills dir:   {skills_dir}")
     print(f"[info] Agents dir:   {agents_dir}")

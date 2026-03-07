@@ -79,27 +79,64 @@ I will install: <selected-plugins> with scope=<project|user>.
 Proceed?
 ```
 
+### Installing from Inside AgentContract
+
+Run from repo root:
+
+```bash
+python3 scripts/install_codex_skills.py --scope project
+```
+
+The script auto-detects the current directory as both `--source-repo` (plugin discovery) and `--target-root` (install destination).
+
+### Installing into Another Project
+
+When the AgentContract repo and the target project are different directories, use `--source-repo` and `--target-root`:
+
+```bash
+python3 /path/to/AgentContract/scripts/install_codex_skills.py \
+  --source-repo /path/to/AgentContract \
+  --target-root . \
+  --scope project \
+  --plugins all
+```
+
+Preview what will happen first:
+
+```bash
+python3 /path/to/AgentContract/scripts/install_codex_skills.py \
+  --source-repo /path/to/AgentContract \
+  --target-root . \
+  --scope project \
+  --dry-run
+```
+
 ### If an Agent Needs to Fetch the Repo First
 
 ```bash
 git clone <REPO_URL> AgentContract
-cd AgentContract
-python3 scripts/install_codex_skills.py --list --json > /tmp/codex_plugin_inventory.json
+python3 AgentContract/scripts/install_codex_skills.py \
+  --source-repo AgentContract \
+  --target-root . \
+  --list --json > /tmp/codex_plugin_inventory.json
 ```
 
 Then install using the discovered set (no static list):
 
 ```bash
-python3 scripts/install_codex_skills.py --scope project
+python3 AgentContract/scripts/install_codex_skills.py \
+  --source-repo AgentContract \
+  --target-root . \
+  --scope project
 ```
 
 Suggested agent instruction:
 
 ```text
 Clone the AgentContract repo, run:
-python3 scripts/install_codex_skills.py --list --json
+python3 AgentContract/scripts/install_codex_skills.py --source-repo AgentContract --list --json
 Use that discovered inventory (plugins/skills/agents) as the source of truth,
-then run installation with --scope project.
+then run installation with --source-repo AgentContract --target-root . --scope project.
 Do not hardcode plugin or skill names.
 ```
 
