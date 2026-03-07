@@ -38,6 +38,38 @@ When creating a new CLAUDE.md for a directory, adapt this structure to the direc
 - Gotchas or pitfalls
 ```
 
+## Nested Structure
+
+Context is progressively revealed through a hierarchy of `CLAUDE.md` files:
+
+```
+repo/
+├── CLAUDE.md          # Project-wide: architecture, tech stack, conventions
+├── AGENTS.md -> CLAUDE.md   # Symlink
+├── src/
+│   ├── CLAUDE.md      # src module purpose and conventions
+│   ├── AGENTS.md -> CLAUDE.md
+│   ├── core/
+│   │   ├── CLAUDE.md  # Core module specifics
+│   │   └── AGENTS.md -> CLAUDE.md
+│   └── utils/
+│       ├── CLAUDE.md  # Utils module specifics
+│       └── AGENTS.md -> CLAUDE.md
+```
+
+Each level documents only what is specific to that module. Do not repeat guidance from parent `CLAUDE.md` files.
+
+## AGENTS.md Symlink
+
+`AGENTS.md` is a mirror of `CLAUDE.md`. Whenever one exists, create a symlink for the other:
+
+```bash
+# In the same directory as the CLAUDE.md
+ln -s CLAUDE.md AGENTS.md
+```
+
+If only `AGENTS.md` exists, symlink in the other direction: `ln -s AGENTS.md CLAUDE.md`.
+
 ## Guidelines
 
 - Keep it under 50 lines for leaf directories, under 100 for major modules

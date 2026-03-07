@@ -9,8 +9,8 @@ description: "Review code thoroughly, update documentation coverage, and commit 
 Review, document, and commit workflow. Use dedicated subagents for review, documentation, and commit phases.
 
 1. **Scope** — determine what to commit (no subagent)
-2. **Review** — comprehensive code quality and correctness review (Code Review Subagent)
-3. **Document** — comprehensive documentation review + updates (Documentation Subagent)
+2. **Document** — comprehensive documentation review + updates (Documentation Subagent)
+3. **Review** — two parallel subagents: Implementation Review + Integration & Consistency Review
 4. **Commit** — group by topic and commit only after clean review/doc gates (Commit Subagent)
 
 Execution model:
@@ -32,31 +32,8 @@ Output contract from Scope phase:
 - File classification (code, tests, docs, generated/binary)
 - Any blocking state (merge conflicts, nothing to commit)
 
-## Phase 2: Comprehensive Review (Code Review Subagent)
 
-For each changed **code/test/config** file, perform a serious review against project guidance and existing docs:
-
-1. Find the nearest `CLAUDE.md` by walking up from the file's directory to the repo root.
-2. Read `CLAUDE.md`/`AGENTS.md` guidance relevant to that file.
-3. Review the diff for code quality and behavior:
-   - Violations of stated conventions
-   - Inconsistencies with existing behavior or interfaces
-   - Security issues (injection, XSS, hardcoded secrets)
-   - Obvious bugs or logic errors
-   - Performance regressions or unnecessary complexity
-   - Breaking changes to public interfaces without required migration notes
-   - Test gaps for changed behavior
-4. Where possible, run a second independent review perspective/subagent for cross-checking.
-
-If issues are found:
-- **Do not commit**
-- Summarize issues clearly with file-level references
-- Return to the user to discuss tradeoffs and resolution plan before moving forward
-- Only continue once issues are resolved (or user explicitly accepts risk)
-
-Skip deep quality review for binary/generated files.
-
-## Phase 3: Documentation (Documentation Subagent)
+## Phase 2: Documentation (Documentation Subagent)
 
 Review and update documentation thoroughly so it reflects the latest changes. This includes inline docs and top-level/project docs.
 
@@ -65,18 +42,38 @@ Coverage checklist:
    - Docstrings/comments for changed public APIs, complex logic, and non-obvious constraints
    - Type/interface documentation where applicable
 2. Directory/project guidance docs:
-   - `CLAUDE.md` (or legacy `cloud.md` if present)
-   - `AGENTS.md`
+   - `CLAUDE.md` / `AGENTS.md` (see nested structure below)
 3. User/developer-facing docs:
    - `README.md` (root and impacted module-level READMEs)
    - Other impacted docs (`docs/`, architecture notes, runbooks, examples, changelogs)
 
-Required actions:
-1. For each directory containing changed files (and important source subfolders), check whether guidance docs exist and are current.
-2. Create missing guidance docs when relevant.
-3. Update existing docs for new patterns, modules, architecture, commands, constraints, and behavior changes introduced by the diff.
-4. Keep `AGENTS.md`, `CLAUDE.md`, and README/docs mutually consistent.
-5. Ensure docs clearly describe any breaking changes, migration notes, or operational changes.
+
+### Nested CLAUDE.md Structure
+
+Context is progressively revealed through a hierarchy of `CLAUDE.md` files. Each level adds module-specific guidance without repeating what parent docs already cover:
+
+- **Repo root `CLAUDE.md`** — overall architecture, tech stack, build/test commands, project-wide conventions
+- **Module/subfolder `CLAUDE.md`** — the module's purpose, its conventions, non-obvious design decisions, and how to work with it
+
+When reviewing or documenting a file, walk up from the file's directory to the repo root and read every `CLAUDE.md` encountered along the way. The union of these files provides the full context for that file.
+
+### AGENTS.md Symlink Convention
+
+`AGENTS.md` is a mirror of `CLAUDE.md`. Both names should resolve to the same content. When creating or discovering guidance docs:
+
+1. If only `CLAUDE.md` exists, create a symlink: `ln -s CLAUDE.md AGENTS.md`
+2. If only `AGENTS.md` exists, create a symlink: `ln -s AGENTS.md CLAUDE.md`
+3. If both exist as separate files, unify them: keep the richer file and replace the other with a symlink
+4. Always use relative symlinks (just the filename, not absolute paths)
+
+### Required Actions
+
+1. For each directory containing changed files (and important source subfolders), check whether a `CLAUDE.md` exists.
+2. If a module directory lacks a `CLAUDE.md`, create one describing the module's purpose and conventions.
+3. Ensure the `AGENTS.md` symlink exists alongside every `CLAUDE.md` (and vice versa).
+4. Update existing docs for new patterns, modules, architecture, commands, constraints, and behavior changes introduced by the diff.
+5. Keep guidance docs and README/docs mutually consistent.
+6. Ensure docs clearly describe any breaking changes, migration notes, or operational changes.
 
 Rules for documentation content:
 - Describe the purpose of the directory/module
@@ -85,14 +82,65 @@ Rules for documentation content:
 - Keep it concise and actionable
 - Do NOT duplicate information already covered well in parent docs; link instead when helpful
 
+Initial intention: Update documentation to reflect the latest changes, ensuring all relevant sections, terminology, and examples are revised accordingly.
+
 Output contract from Documentation Subagent:
 - Files reviewed and files updated
 - Coverage checklist status
 - Any unresolved documentation ambiguity needing user input
 
+Note: The Integration & Consistency reviewer (Phase 3, Subagent B) will independently verify that documentation updates are consistent with the actual code changes and with each other. This cross-check catches docs that were updated in isolation without accounting for the full picture.
+
+
+## Phase 3: Comprehensive Review (Two Review Subagents)
+
+Spawn **two review subagents in parallel**, each with a distinct perspective. A common failure mode is reviewing changes in isolation — one agent focuses narrowly on the changed files while missing how those changes interact with the rest of the project. These two agents address that by splitting the review into complementary scopes.
+
+### Subagent A: Implementation Review
+
+Focus: the changed code itself.
+
+1. Find the nearest `CLAUDE.md` by walking up from each changed file's directory to the repo root.
+2. Read all relevant `CLAUDE.md`/`AGENTS.md` guidance.
+3. Review the diff for:
+   - Correctness and logic errors
+   - Violations of stated conventions
+   - Security issues (injection, XSS, hardcoded secrets)
+   - Unnecessary complexity or performance regressions
+   - Test coverage gaps for changed behavior
+
+### Subagent B: Integration & Consistency Review
+
+Focus: how the changes fit into the broader project.
+
+1. Identify all components that interact with the changed code (callers, dependents, shared interfaces, configuration, documentation references).
+2. Review for:
+   - **Consistency**: Do the changes align with patterns, naming, and conventions used elsewhere in the project?
+   - **Ripple effects**: Do other components need updating to stay compatible? (e.g., a renamed export, changed API contract, new config key)
+   - **Compatibility**: Should the current changes be modified to better fit existing code rather than forcing the rest of the project to adapt?
+   - **Documentation references**: Do other docs, READMEs, or examples reference the changed behavior and need updates?
+3. Based on the intent of the changes, recommend whether:
+   - Other components should be updated to match the new changes, or
+   - The current changes should be adjusted to integrate more smoothly with existing code
+
+### Merging Review Results
+
+After both subagents complete:
+
+1. Combine their findings into a single issue list, deduplicating overlaps.
+2. Flag any contradictions between the two reviews for the user to resolve.
+
+If **any** issues are found:
+- **Do not commit**
+- Summarize issues clearly with file-level references
+- Return to the user to discuss tradeoffs and resolution plan before moving forward
+- Only continue once issues are resolved (or user explicitly accepts risk)
+
+Skip deep quality review for binary/generated files.
+
 ## Phase 4: Commit (Commit Subagent)
 
-Commit only after Phase 2 is clean and Phase 3 documentation updates are complete. Group changes into topical commits. Never combine unrelated changes.
+Commit only after Phase 2 documentation updates and Phase 3 review are both complete and clean. Group changes into topical commits. Never combine unrelated changes.
 
 ### Grouping Strategy
 
@@ -112,7 +160,7 @@ Commit only after Phase 2 is clean and Phase 3 documentation updates are complet
 
 <optional body explaining why, not what>
 
-Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
+Co-Authored-By: Claude <model> <noreply@anthropic.com>
 ```
 
 Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
