@@ -130,6 +130,56 @@ class TestSeedDiffApply:
         assert summary.copied >= 1
         assert (target / "output" / "new.csv").exists()
         assert (target / "output" / "result.csv").read_text(encoding="utf-8") == "local,keep\n"
+        assert not (target / "data").exists()
+
+    def test_seed_force_cow_copies_shared_only_roots(self, repo_with_worktrees):
+        main = repo_with_worktrees["main"]
+        target = repo_with_worktrees["a"]
+
+        entries = worktree_data_discovery.discover_managed_entries(main)
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-cow")
+
+        assert summary.copied >= 1
+        assert (target / "data").is_dir()
+        assert not (target / "data").is_symlink()
+        assert (target / "data" / "shared.txt").read_text(encoding="utf-8") == "shared\n"
+
+    def test_seed_force_symlink_creates_shared_root_symlink(self, repo_with_worktrees):
+        main = repo_with_worktrees["main"]
+        target = repo_with_worktrees["a"]
+
+        entries = worktree_data_discovery.discover_managed_entries(main)
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+
+        assert summary.symlinked >= 1
+        assert (target / "data").is_symlink()
+        assert (target / "data").resolve() == (main / "data").resolve()
+
+    def test_seed_force_symlink_creates_regular_root_symlink(self, repo_with_worktrees):
+        main = repo_with_worktrees["main"]
+        target = repo_with_worktrees["a"]
+
+        entries = worktree_data_discovery.discover_managed_entries(main)
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+
+        assert summary.symlinked >= 1
+        assert (target / "output").is_symlink()
+        assert (target / "output").resolve() == (main / "output").resolve()
+
+    def test_seed_force_symlink_skips_existing_root(self, repo_with_worktrees):
+        main = repo_with_worktrees["main"]
+        target = repo_with_worktrees["a"]
+
+        (target / "output").mkdir(parents=True, exist_ok=True)
+        (target / "output" / "local.txt").write_text("keep\n", encoding="utf-8")
+
+        entries = worktree_data_discovery.discover_managed_entries(main)
+        summary = sync_worktree_data.run_seed(entries, target, seed_sync_mode="force-symlink")
+
+        assert summary.skipped_existing >= 1
+        assert (target / "output").is_dir()
+        assert not (target / "output").is_symlink()
+        assert (target / "output" / "local.txt").read_text(encoding="utf-8") == "keep\n"
 
     def test_diff_outputs_stable_change_records(self, repo_with_worktrees):
         main = repo_with_worktrees["main"]
@@ -387,6 +437,72 @@ class TestCliSurface:
         )
         assert proc.returncode != 0
         assert "unrecognized arguments" in proc.stderr
+
+    def test_cli_rejects_seed_sync_mode_with_diff(self, repo_with_worktrees):
+        script = SCRIPTS_DIR / "sync_worktree_data.py"
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--to",
+                str(repo_with_worktrees["a"]),
+                "--mode",
+                "diff",
+                "--seed-sync-mode",
+                "force-cow",
+            ],
+            cwd=repo_with_worktrees["main"],
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode != 0
+        assert "--seed-sync-mode is only valid with --mode seed" in proc.stderr
+
+    def test_cli_rejects_seed_sync_mode_with_apply(self, repo_with_worktrees):
+        script = SCRIPTS_DIR / "sync_worktree_data.py"
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--to",
+                str(repo_with_worktrees["a"]),
+                "--mode",
+                "apply",
+                "--action",
+                "overwrite",
+                "--seed-sync-mode",
+                "force-symlink",
+            ],
+            cwd=repo_with_worktrees["main"],
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode != 0
+        assert "--seed-sync-mode is only valid with --mode seed" in proc.stderr
+
+    def test_cli_seed_dry_run_reports_seed_mode_without_mutation(self, repo_with_worktrees):
+        script = SCRIPTS_DIR / "sync_worktree_data.py"
+        target = repo_with_worktrees["a"]
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--to",
+                str(target),
+                "--mode",
+                "seed",
+                "--seed-sync-mode",
+                "force-symlink",
+                "--dry-run",
+            ],
+            cwd=repo_with_worktrees["main"],
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode == 0
+        assert "Seed mode: force-symlink" in proc.stdout
+        assert not (target / "output").exists()
+        assert not (target / "data").exists()
 
 
 class TestAnnotationCompatibility:

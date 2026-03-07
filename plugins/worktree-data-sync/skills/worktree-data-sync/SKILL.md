@@ -45,6 +45,14 @@ Rules:
 - never overwrites existing destination files
 - applies stateless managed-path discovery
 
+Optional: `--seed-sync-mode <auto|force-symlink|force-cow>` (default: `auto`)
+
+- `auto`: preserve current per-path behavior (shared-only roots get symlinks, others get copies)
+- `force-symlink`: create top-level symlinks for all managed roots when the destination path does not already exist; conflicting paths are skipped
+- `force-cow`: copy/COW all managed roots, including shared-only annotated paths
+
+`--seed-sync-mode` is only valid with `--mode seed`; the CLI rejects it for other modes.
+
 ### `--mode diff`
 
 Report source-to-destination differences for managed files.
@@ -94,6 +102,18 @@ Shared-only roots are excluded from copy/apply actions.
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed
+
+# Seed using top-level symlinks for all managed roots
+python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+  --to ../MyRepo-feature \
+  --mode seed \
+  --seed-sync-mode force-symlink
+
+# Seed using copy/COW for all managed roots (including shared-only)
+python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+  --to ../MyRepo-feature \
+  --mode seed \
+  --seed-sync-mode force-cow
 
 # Diff explicit source -> destination
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \

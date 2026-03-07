@@ -19,6 +19,7 @@ from worktree_data_discovery import discover_managed_entries, resolve_endpoints
 
 Action = Literal["overwrite", "rename"]
 Status = Literal["new", "modified", "unchanged"]
+SeedSyncMode = Literal["auto", "force-symlink", "force-cow"]
 
 # SF_DATALESS flag indicating cloud-only file (Dropbox, iCloud, etc.)
 SF_DATALESS = 0x40000000
@@ -167,17 +168,52 @@ def copy_missing_tree(
             summary.errors += 1
 
 
-def run_seed(entries: list[dict], destination_root: Path, dry_run: bool = False) -> SeedSummary:
+def symlink_missing_entry(
+    source_path: Path,
+    destination_path: Path,
+    summary: SeedSummary,
+    dry_run: bool = False,
+) -> None:
+    """Create one symlink for a managed entry without replacing existing content."""
+    if destination_path.exists() or destination_path.is_symlink():
+        summary.skipped_existing += 1
+        return
+
+    if not source_path.exists():
+        summary.errors += 1
+        return
+
+    if not dry_run:
+        try:
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            destination_path.symlink_to(source_path.resolve())
+        except OSError:
+            summary.errors += 1
+            return
+
+    summary.symlinked += 1
+
+
+def run_seed(
+    entries: list[dict],
+    destination_root: Path,
+    dry_run: bool = False,
+    seed_sync_mode: SeedSyncMode = "auto",
+) -> SeedSummary:
     """Materialize missing managed files into destination worktree."""
     summary = SeedSummary()
 
     for entry in entries:
-        if entry.get("shared_only", False):
+        if seed_sync_mode == "auto" and entry.get("shared_only", False):
             continue
 
         source_path = Path(entry["source"])
         destination_path = destination_root / entry["path"]
         entry_kind = entry.get("entry_kind", "directory")
+
+        if seed_sync_mode == "force-symlink":
+            symlink_missing_entry(source_path, destination_path, summary, dry_run=dry_run)
+            continue
 
         if entry_kind == "directory":
             copy_missing_tree(source_path, destination_path, summary, dry_run=dry_run)
@@ -809,6 +845,12 @@ Examples:
     parser.add_argument("--from", dest="from_path", help="Source worktree path (default: main worktree)")
     parser.add_argument("--to", dest="to_path", required=True, help="Destination worktree path")
     parser.add_argument("--mode", choices=["seed", "diff", "apply"], required=True)
+    parser.add_argument(
+        "--seed-sync-mode",
+        choices=["auto", "force-symlink", "force-cow"],
+        default="auto",
+        help="Seed-only materialization mode override (default: auto)",
+    )
 
     parser.add_argument("--action", choices=["overwrite", "rename"], help="Action for apply mode")
     parser.add_argument("--from-json", type=Path, help="Path to diff JSON output")
@@ -834,6 +876,9 @@ def main() -> None:
 
     if args.mode != "diff" and args.json:
         parser.error("--json is only valid with --mode diff")
+
+    if args.mode != "seed" and args.seed_sync_mode != "auto":
+        parser.error("--seed-sync-mode is only valid with --mode seed")
 
     if args.mode == "seed" and (args.action or args.from_json or args.files or args.interactive):
         parser.error("--mode seed does not support apply options")
@@ -862,9 +907,15 @@ def main() -> None:
     entries = discover_managed_entries(source_root)
 
     if args.mode == "seed":
-        summary = run_seed(entries, destination_root, dry_run=args.dry_run)
+        summary = run_seed(
+            entries,
+            destination_root,
+            dry_run=args.dry_run,
+            seed_sync_mode=args.seed_sync_mode,
+        )
         print(f"From: {source_root}")
         print(f"To:   {destination_root}")
+        print(f"Seed mode: {args.seed_sync_mode}")
         print(
             "Seed summary: "
             f"copied={summary.copied}, symlinked={summary.symlinked}, "

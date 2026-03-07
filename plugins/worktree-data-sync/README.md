@@ -47,9 +47,14 @@ Data/  # worktree:symlink
 
 ## Modes
 
-- `seed`: copy only missing managed files from source to destination
+- `seed`: materialize missing managed files from source to destination
+  - default `--seed-sync-mode auto`: preserve current per-path behavior
+  - `--seed-sync-mode force-symlink`: create top-level symlinks for managed roots when the destination path does not already exist
+  - `--seed-sync-mode force-cow`: copy/COW all managed roots, including shared-only annotated paths
 - `diff`: report source-to-destination deltas (`new`, `modified`, `unchanged`)
 - `apply`: execute `overwrite` or `rename` actions on selected changes
+
+`force-symlink` is intended for initial seeding and never replaces an existing destination root; conflicting paths are skipped.
 
 ## Examples
 
@@ -59,13 +64,25 @@ python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed
 
-# 2) Diff explicit source -> destination
+# 2) Seed using top-level symlinks for all managed roots
+python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+  --to ../MyRepo-feature \
+  --mode seed \
+  --seed-sync-mode force-symlink
+
+# 3) Seed using copy/COW for all managed roots, including shared-only ones
+python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+  --to ../MyRepo-feature \
+  --mode seed \
+  --seed-sync-mode force-cow
+
+# 4) Diff explicit source -> destination
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --from ../MyRepo-experimentA \
   --to ../MyRepo-experimentB \
   --mode diff --json
 
-# 3) Apply overwrite from diff json
+# 5) Apply overwrite from diff json
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode apply \
