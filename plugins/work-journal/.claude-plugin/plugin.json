@@ -1,6 +1,6 @@
 {
   "name": "work-journal",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Working journal entries and markdown report generation for academic research",
   "author": {
     "name": "Zhiyu Fu"
