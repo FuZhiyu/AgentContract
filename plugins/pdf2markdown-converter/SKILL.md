@@ -1,6 +1,7 @@
 ---
 name: mistral-pdf-to-markdown
 description: Convert PDFs to Markdown using Mistral OCR API with image extraction. Use when you need to extract structured text and images from PDFs, especially for scanned documents or documents with complex formatting. Outputs Markdown with embedded images.
+user-invocable: true
 ---
 
 # Mistral PDF to Markdown Converter

@@ -1,6 +1,7 @@
 ---
 name: worktree-data-sync
 description: Sync non-git data between existing git worktrees. Supports seed, diff, and apply modes using explicit --from/--to endpoints. Does not create/remove worktrees or manage sandbox settings.
+user-invocable: true
 ---
 
 # Worktree Data Sync Skill

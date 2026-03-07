@@ -1,6 +1,7 @@
 ---
 name: work-journal
 description: Create formal, fact-checked work journal entries after completing analysis work. Use when user asks to "summarize work", "document results", or "create work journal entry". Ensures code is committed, copies figures to attachments, and creates objective summaries with mandatory citations and report-checker verification. For quick reports without fact-checking, use the `report-in-markdown` skill.
+user-invocable: true
 ---
 
 # Work Journal Skill

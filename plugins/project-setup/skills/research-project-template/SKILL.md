@@ -1,6 +1,7 @@
 ---
 name: research-project-template
 description: Create new academic research projects with two-folder architecture. Use when user wants to create a new research project, start a new paper, set up a new analysis project, or mentions needing a project structure for research.
+user-invocable: true
 ---
 
 # Research Project Template
