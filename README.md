@@ -96,7 +96,7 @@ paper-reader:
 
 ## For Codex CLI Users
 
-See [CODEX_INSTALL.md](CODEX_INSTALL.md) for installation instructions with OpenAI Codex.
+Ask Codex to read [CODEX_INSTALL.md](CODEX_INSTALL.md) for installation instructions.
 
 ## License
 

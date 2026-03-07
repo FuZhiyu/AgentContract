@@ -1,4 +1,6 @@
-# Codex Install Guide (Skills + Project-Scoped Agent Instructions)
+# Codex Install Guide
+
+**This file is meant to be read by an agent (Codex).** Ask Codex to read this file for installation.
 
 This repository is structured for Claude plugins. This guide shows how to install the same skills for Codex, with project-scoped config under `./.codex/`.
 
