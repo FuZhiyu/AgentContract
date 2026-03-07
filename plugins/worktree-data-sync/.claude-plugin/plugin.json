@@ -1,6 +1,6 @@
 {
   "name": "worktree-data-sync",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "Sync non-git data between existing git worktrees",
   "author": {
     "name": "Zhiyu Fu"
