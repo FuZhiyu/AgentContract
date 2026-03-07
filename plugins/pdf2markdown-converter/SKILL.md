@@ -67,8 +67,18 @@ print(result.stdout)
 ## Requirements
 
 The script requires:
-- Mistral API key in `Notes/.env` (line 2: `mistral_api_key=...`)
+- Mistral API key (see API Key Setup below)
 - Python packages: `mistralai`, `python-dotenv`, `pypdf`
+
+## API Key Setup
+
+The script checks these locations in order (first match wins):
+
+1. **Environment variable** `MISTRAL_API_KEY` — recommended for personal use (e.g., add `export MISTRAL_API_KEY=your-key` to `secrets.sh`)
+2. **Shared config** — `.claude/econ-research.yaml` or `~/.config/econ-research/config.yaml` under `paper-reader.mistral_api_key`
+3. **`Notes/.env`** — add `MISTRAL_API_KEY=your-key`. This file is gitignored but Dropbox-synced, making it convenient for teams sharing a project folder
+
+> **Never commit API keys to git.** Use environment variables or Dropbox-synced `Notes/.env` instead.
 
 ## Common Use Cases
 
@@ -101,9 +111,9 @@ python scripts/convert_pdf_to_markdown.py \
 
 **API Key Not Found:**
 ```
-Error: Mistral API key not found in Notes/.env
+Error: Mistral API key not found
 ```
-→ Add `mistral_api_key=YOUR_KEY` to line 2 of `Notes/.env`
+→ See **API Key Setup** above for three ways to configure it
 
 **Page Out of Range:**
 ```

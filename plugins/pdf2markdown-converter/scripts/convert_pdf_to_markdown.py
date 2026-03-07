@@ -32,10 +32,17 @@ def load_api_key():
     """
     Load Mistral API key.
 
-    Tries shared config first (.claude/econ-research.yaml),
-    then falls back to legacy Notes/.env file.
+    Resolution order:
+    1. Environment variable MISTRAL_API_KEY (e.g., from secrets.sh)
+    2. Shared config (.claude/econ-research.yaml or ~/.config/econ-research/config.yaml)
+    3. Notes/.env file (Dropbox-synced, convenient for teams)
     """
-    # Try shared config first
+    # 1. Environment variable
+    api_key = os.getenv("MISTRAL_API_KEY")
+    if api_key:
+        return api_key
+
+    # 2. Shared config
     if USE_SHARED_CONFIG:
         try:
             api_key = get_mistral_api_key()
@@ -44,15 +51,19 @@ def load_api_key():
         except Exception:
             pass
 
-    # Fall back to legacy .env file
+    # 3. Notes/.env file
     env_path = Path("Notes/.env")
     load_dotenv(env_path)
-    api_key = os.getenv("mistral_api_key")
+    api_key = os.getenv("MISTRAL_API_KEY") or os.getenv("mistral_api_key")
+    if api_key:
+        return api_key
 
-    if not api_key:
-        raise ValueError("Mistral API key not found. Configure in .claude/econ-research.yaml or Notes/.env")
-
-    return api_key
+    raise ValueError(
+        "Mistral API key not found. Supply it via one of:\n"
+        "  1. Environment variable: export MISTRAL_API_KEY=your-key (e.g., in secrets.sh)\n"
+        "  2. Config file: .claude/econ-research.yaml (paper-reader.mistral_api_key)\n"
+        "  3. Notes/.env: MISTRAL_API_KEY=your-key (Dropbox-synced for teams)"
+    )
 
 
 def extract_pages(pdf_path, page_selection=None):
