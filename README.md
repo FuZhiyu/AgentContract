@@ -9,7 +9,7 @@ A Claude Code plugin marketplace for academic research workflows.
 | `project-setup` | Create research projects with two-folder architecture |
 | `zotero-connector` | Read papers from Zotero library |
 | `pdf2markdown-converter` | Convert PDFs to markdown via Mistral OCR |
-| `work-journal` | Working journal and documentation quality |
+| `work-journal` | Formal work journal entries and markdown report IO |
 | `worktree-data-sync` | Sync non-git data across existing worktrees |
 | `draft-reviewer` | Multi-agent academic paper review |
 | `review-doc-commit` | Review code, update docs, and create topical commits |
@@ -67,10 +67,9 @@ Creates new research projects with:
 - Great for scanned documents
 
 ### work-journal
-- Create factual working journal entries
-- Review code for research correctness
-- Validate documentation accuracy
-- Summarize analysis results
+- `work-journal` skill: formal, fact-checked journal entries with citations and report-checker verification
+- `report-in-markdown` skill: pure IO tool for saving markdown reports (no content rules)
+- Agents: code-reviewer, report-checker, results-summarizer
 
 ### worktree-data-sync
 - Sync non-git files between existing worktrees
@@ -84,8 +83,8 @@ Creates new research projects with:
 - Integrates with pdf2markdown-converter for PDF input
 
 ### review-doc-commit
-- Review code changes against project CLAUDE.md guidelines
-- Auto-fix formatting issues, warn on critical problems
-- Ensure CLAUDE.md coverage for all directories
+- Two-agent code review: implementation correctness + integration/consistency
+- Ensure CLAUDE.md coverage for all directories with AGENTS.md symlinks
+- Hard gate: no commit until review is clean
 - Group changes into topical commits
 

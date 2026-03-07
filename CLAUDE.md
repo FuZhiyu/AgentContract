@@ -27,7 +27,6 @@ plugin-name/
 ├── .claude-plugin/
 │   └── plugin.json      # Plugin metadata, hooks, permissions
 ├── skills/
-│   ├── skill-name.skill # Skill bundle (ZIP) for distribution
 │   └── skill-name/
 │       ├── SKILL.md     # Skill instructions
 │       └── references/  # Supporting files
@@ -48,12 +47,13 @@ user-invocable: true  # Set false for internal-only skills
 
 ### Plugin Naming
 - Use kebab-case for plugin and skill names
-- Skill names should describe the action (e.g., `work-summary`, `draft-review`)
+- Skill names should describe the action (e.g., `work-journal`, `draft-review`)
 - Agent names use kebab-case with descriptive suffixes (e.g., `mathematical-reviewer`)
 
 ### Subagent Types
 - Register subagents as `plugin-name:agent-name` (e.g., `draft-reviewer:mathematical-reviewer`)
-- Define agent instructions in `agents/agent-name.md`
+- Define agent instructions in `agents/agent-name.md` for standalone reusable agents
+- Lightweight subagents (e.g., review checklists) may be defined inline in SKILL.md
 
 ### Scripts
 - Prefer Python for complex logic, bash for simple file operations
@@ -67,7 +67,6 @@ user-invocable: true  # Set false for internal-only skills
 1. Create directory under `plugins/`
 2. Add `.claude-plugin/plugin.json` with name, description, author
 3. Add skills in `skills/skill-name/SKILL.md`
-4. Build skill bundle: zip the skill directory into `skill-name.skill`
 
 ### Testing
 
@@ -93,7 +92,9 @@ config = load_config('plugin-name')
 | Plugin | Type | Description |
 |--------|------|-------------|
 | `project-setup` | Skill | Creates two-folder research project structure |
-| `work-journal` | Skill + Agent | Working journal entries with quality validation |
+| `zotero-connector` | Skill | Read papers from Zotero library |
+| `pdf2markdown-converter` | Skill | Convert PDFs to markdown via Mistral OCR |
+| `work-journal` | Skills + Agents | Formal work journal entries and markdown report IO |
 | `draft-reviewer` | Skill + Agents | Multi-agent paper review system |
-| `review-doc-commit` | Skill | Code review, docs, and topical git commits |
+| `review-doc-commit` | Skill + Agents | Parallel review, documentation, and topical git commits |
 | `worktree-data-sync` | Skill | Sync non-git data across existing worktrees |

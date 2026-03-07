@@ -1,7 +1,7 @@
 ---
 name: review-doc-commit
 user-invocable: true
-description: "Review code thoroughly, update documentation coverage, and commit only when the review is clean. Use when the user invokes /review-doc-commit, asks to commit changes, or wants review + docs + commit. Enforces a hard gate: if any issue is found, stop and discuss with the user before committing. Supports scoped commits (e.g., '/review-doc-commit changes in folder A') or full-repo commits."
+description: "Review, document, and commit. Use proactively when user asks to commit. Hard gate: no commit until review is clean."
 ---
 
 # Commit
@@ -15,7 +15,8 @@ Review, document, and commit workflow. Use dedicated subagents for review, docum
 
 Execution model:
 - Phase 1 runs first.
-- Phases 2 and 3 run in parallel on the same scoped file set.
+- Phase 2 (Documentation) runs first and completes before Phase 3.
+- Phase 3 (Review) runs after Phase 2, so reviewers can verify documentation consistency.
 - Phase 4 runs only after both Phase 2 and Phase 3 are complete and clean.
 
 ## Phase 1: Determine Scope
@@ -82,14 +83,12 @@ Rules for documentation content:
 - Keep it concise and actionable
 - Do NOT duplicate information already covered well in parent docs; link instead when helpful
 
-Initial intention: Update documentation to reflect the latest changes, ensuring all relevant sections, terminology, and examples are revised accordingly.
-
 Output contract from Documentation Subagent:
 - Files reviewed and files updated
 - Coverage checklist status
 - Any unresolved documentation ambiguity needing user input
 
-Note: The Integration & Consistency reviewer (Phase 3, Subagent B) will independently verify that documentation updates are consistent with the actual code changes and with each other. This cross-check catches docs that were updated in isolation without accounting for the full picture.
+Phase 2 must complete before Phase 3 starts. This ensures reviewers can verify that documentation updates are consistent with code changes.
 
 
 ## Phase 3: Comprehensive Review (Two Review Subagents)
@@ -118,7 +117,7 @@ Focus: how the changes fit into the broader project.
    - **Consistency**: Do the changes align with patterns, naming, and conventions used elsewhere in the project?
    - **Ripple effects**: Do other components need updating to stay compatible? (e.g., a renamed export, changed API contract, new config key)
    - **Compatibility**: Should the current changes be modified to better fit existing code rather than forcing the rest of the project to adapt?
-   - **Documentation references**: Do other docs, READMEs, or examples reference the changed behavior and need updates?
+   - **Documentation consistency**: Are Phase 2 documentation updates accurate and consistent with the code changes and with each other?
 3. Based on the intent of the changes, recommend whether:
    - Other components should be updated to match the new changes, or
    - The current changes should be adjusted to integrate more smoothly with existing code
