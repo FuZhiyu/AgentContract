@@ -29,10 +29,10 @@ plugin-name/
 ├── skills/
 │   └── skill-name/
 │       ├── SKILL.md     # Skill instructions
+│       ├── scripts/     # Executable scripts co-located with the skill
+│       │   └── _config_loader.py  # Self-contained config loader (copy of shared/config.py)
 │       └── references/  # Supporting files
 ├── agents/              # Subagent definitions (optional)
-├── scripts/             # Executable scripts (bash, python)
-│   └── _config_loader.py  # Self-contained config loader (copy of shared/config.py)
 └── hooks/               # Hook scripts (optional)
 ```
 
@@ -71,11 +71,12 @@ tools: [Read, Grep, Glob, Bash]
 - Prefer Python for complex logic, bash for simple file operations
 - Scripts should be executable (`chmod +x`)
 - Python scripts with external dependencies use PEP 723 inline metadata + `#!/usr/bin/env -S uv run --script` shebang for self-installing deps
-- **SKILL.md invocations:**
-  - Scripts with external deps: `uv run python scripts/script.py` (lets `uv` resolve PEP 723 deps)
-  - Scripts without external deps: `python3 scripts/script.py`
+- **Script location:** Place scripts inside the skill directory at `skills/skill-name/scripts/` so they are co-located with the SKILL.md that references them
+- **SKILL.md invocations** — use `${CLAUDE_SKILL_DIR}` (resolves to the directory containing the SKILL.md):
+  - Scripts with external deps: `uv run python ${CLAUDE_SKILL_DIR}/scripts/script.py`
+  - Scripts without external deps: `python3 ${CLAUDE_SKILL_DIR}/scripts/script.py`
   - Inline one-liners needing external packages: `uv run --with <pkg> python -c "..."`
-- Use `${CLAUDE_PLUGIN_ROOT}` to reference plugin directory
+- `${CLAUDE_PLUGIN_ROOT}` is available in hooks and MCP configs but **not** in SKILL.md content
 - Each plugin carries its own `_config_loader.py` (do NOT use `sys.path` hacks to reach `shared/`)
 
 ## Development
@@ -86,7 +87,7 @@ tools: [Read, Grep, Glob, Bash]
 2. Add `.claude-plugin/plugin.json` with name, description, author, license, repository, keywords
 3. Add skills in `skills/skill-name/SKILL.md`
 4. If the plugin has Python scripts with external deps, add PEP 723 metadata
-5. Copy `shared/config.py` as `scripts/_config_loader.py` if config access is needed
+5. Copy `shared/config.py` as `skills/skill-name/scripts/_config_loader.py` if config access is needed
 
 ### Releasing Changes
 
@@ -108,7 +109,7 @@ from _config_loader import load_config
 config = load_config('plugin-name')
 ```
 
-The canonical reference is `shared/config.py`. When updating config logic, sync changes to each plugin's `scripts/_config_loader.py`.
+The canonical reference is `shared/config.py`. When updating config logic, sync changes to each plugin's `skills/skill-name/scripts/_config_loader.py`.
 
 ## Key Plugins
 

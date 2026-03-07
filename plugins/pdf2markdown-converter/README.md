@@ -21,6 +21,6 @@ Convert PDFs to Markdown using the Mistral OCR API with automatic image extracti
 Invoke the `mistral-pdf-to-markdown` skill in Claude Code, or run the script directly:
 
 ```bash
-uv run plugins/pdf2markdown-converter/scripts/convert_pdf_to_markdown.py input.pdf output.md
-uv run plugins/pdf2markdown-converter/scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1-5"
+uv run plugins/pdf2markdown-converter/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py input.pdf output.md
+uv run plugins/pdf2markdown-converter/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py input.pdf output.md --pages "1-5"
 ```

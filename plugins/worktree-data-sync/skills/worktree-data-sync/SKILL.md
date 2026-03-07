@@ -25,7 +25,7 @@ Do **not** use this skill for:
 Single CLI entrypoint:
 
 ```bash
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py --to <worktree-path> --mode <seed|diff|apply> [OPTIONS]
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py --to <worktree-path> --mode <seed|diff|apply> [OPTIONS]
 ```
 
 ### Endpoints
@@ -106,37 +106,37 @@ Symlink-only roots are symlinked in seed auto mode and excluded from diff/apply 
 
 ```bash
 # Seed from main worktree into destination
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed
 
 # Seed using top-level symlinks for all managed roots
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \
   --seed-sync-mode force-symlink
 
 # Seed using copy/COW for all managed roots (including symlink-only)
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \
   --seed-sync-mode force-cow
 
 # Diff explicit source -> destination
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --from ../MyRepo-expA \
   --to ../MyRepo-expB \
   --mode diff --json
 
 # Apply overwrite using diff json
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-expB \
   --mode apply \
   --from-json /tmp/changes.json \
   --action overwrite
 
 # Apply rename for explicit files
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --from ../MyRepo-expA \
   --to ../MyRepo-expB \
   --mode apply \

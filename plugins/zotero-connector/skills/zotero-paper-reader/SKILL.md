@@ -48,7 +48,7 @@ Look for the attachment with `type: application/pdf` and note its `Key` (attachm
 Use the bundled script to get the PDF - it automatically tries local storage first, then downloads if needed:
 
 ```bash
-uv run python .claude/skills/zotero-paper-reader/scripts/get_zotero_pdf.py ATTACHMENT_KEY
+uv run python ${CLAUDE_SKILL_DIR}/scripts/get_zotero_pdf.py ATTACHMENT_KEY
 ```
 
 The script workflow:
@@ -61,13 +61,13 @@ The script workflow:
 
 ### Step 4: Convert to Markdown
 
-Use the `mistral-pdf-to-markdown` skill to convert the PDF:
+Use the `mistral-pdf-to-markdown` skill (a separate plugin) to convert the PDF. Invoke it via the Skill tool:
 
-```bash
-uv run python .claude/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py \
-  "PATH_TO_PDF" \
-  "Notes/PaperInMarkdown/CLEAN_FILENAME.md"
 ```
+Skill(skill="mistral-pdf-to-markdown")
+```
+
+Then follow its instructions to convert the PDF at `PATH_TO_PDF` to `Notes/PaperInMarkdown/CLEAN_FILENAME.md`.
 
 **Filename convention:** Create a clean filename from the paper metadata:
 - Format: `Author_Year_Title.md`
@@ -101,9 +101,9 @@ Provide the user with:
 **Workflow:**
 1. Search: `mcp__zotero__zotero_search_items(query="Are Intermediary Constraints Priced")`
 2. Get attachment: `mcp__zotero__zotero_get_item_children(item_key="KPRQ2DLZ")`
-3. Get PDF: `uv run python .claude/skills/zotero-paper-reader/scripts/get_zotero_pdf.py 2HSELEHX`
+3. Get PDF: `uv run python ${CLAUDE_SKILL_DIR}/scripts/get_zotero_pdf.py 2HSELEHX`
    - Returns local path if available, or downloads and returns temp path
-4. Convert: `uv run python .claude/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py [PDF_PATH] Notes/PaperInMarkdown/Du_et_al_2023_Are_Intermediary_Constraints_Priced.md`
+4. Convert: Invoke `mistral-pdf-to-markdown` skill to convert `[PDF_PATH]` → `Notes/PaperInMarkdown/Du_et_al_2023_Are_Intermediary_Constraints_Priced.md`
 5. Read: `Read(file_path="Notes/PaperInMarkdown/Du_et_al_2023_Are_Intermediary_Constraints_Priced.md", limit=500)`
 6. Summarize and offer to dive deeper into specific sections
 

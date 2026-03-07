@@ -26,7 +26,7 @@ This plugin only handles non-git data sync. It does **not**:
 ## Command
 
 ```bash
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py --to <worktree> --mode <seed|diff|apply> [...]
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py --to <worktree> --mode <seed|diff|apply> [...]
 ```
 
 ## `.gitignore` annotations
@@ -64,30 +64,30 @@ By default, seed, diff, and apply modes print per-entry progress to stderr (e.g.
 
 ```bash
 # 1) Seed from main worktree into destination
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed
 
 # 2) Seed using top-level symlinks for all managed roots
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \
   --seed-sync-mode force-symlink
 
 # 3) Seed using copy/COW for all managed roots, including symlink-only ones
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \
   --seed-sync-mode force-cow
 
 # 4) Diff explicit source -> destination
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --from ../MyRepo-experimentA \
   --to ../MyRepo-experimentB \
   --mode diff --json
 
 # 5) Apply overwrite from diff json
-python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode apply \
   --from-json changes.json \

@@ -63,7 +63,7 @@ Execute the project creation script:
 
 ```bash
 cd /path/to/target/location
-bash "${CLAUDE_PLUGIN_ROOT}/scripts/create_project.sh" "ProjectName"
+bash "${CLAUDE_SKILL_DIR}/scripts/create_project.sh" "ProjectName"
 ```
 
 The script will:

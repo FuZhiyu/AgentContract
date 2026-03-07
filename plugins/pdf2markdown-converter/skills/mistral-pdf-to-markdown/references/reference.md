@@ -58,7 +58,7 @@ The script automatically:
 
 ```python
 import sys
-sys.path.append('.claude/skills/mistral-pdf-to-markdown/scripts')
+sys.path.append('${CLAUDE_SKILL_DIR}/scripts')
 from convert_pdf_to_markdown import (
     load_api_key,
     extract_pages,
@@ -97,7 +97,7 @@ for pdf_file in pdf_dir.glob("*.pdf"):
 
     subprocess.run([
         "python",
-        ".claude/skills/mistral-pdf-to-markdown/scripts/convert_pdf_to_markdown.py",
+        "${CLAUDE_SKILL_DIR}/scripts/convert_pdf_to_markdown.py",
         str(pdf_file),
         str(output_file)
     ])
@@ -242,7 +242,7 @@ print(f"Model: {ocr_response.model}")
 # Assume figures are on pages 15, 18, 22, 25
 
 # Step 2: Extract those pages
-python scripts/convert_pdf_to_markdown.py \
+python ${CLAUDE_SKILL_DIR}/scripts/convert_pdf_to_markdown.py \
   "paper.pdf" \
   "Output/PDFConversions/paper_figures.md" \
   --pages "15,18,22,25"
@@ -255,7 +255,7 @@ python scripts/convert_pdf_to_markdown.py \
 
 ```bash
 # Chapter 3 is pages 45-78
-python scripts/convert_pdf_to_markdown.py \
+python ${CLAUDE_SKILL_DIR}/scripts/convert_pdf_to_markdown.py \
   "book.pdf" \
   "Output/PDFConversions/chapter3.md" \
   --pages "45-78"
@@ -265,7 +265,7 @@ python scripts/convert_pdf_to_markdown.py \
 
 ```bash
 # Scanned documents benefit most from OCR
-python scripts/convert_pdf_to_markdown.py \
+python ${CLAUDE_SKILL_DIR}/scripts/convert_pdf_to_markdown.py \
   "scanned_contract.pdf" \
   "Output/PDFConversions/contract.md"
 ```
