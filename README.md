@@ -25,28 +25,25 @@ A Claude Code plugin marketplace for academic research workflows.
 
 ```bash
 # Add marketplace
-claude /plugin marketplace add FuZhiyu/AgentContract
+/plugin marketplace add FuZhiyu/AgentContract
 
 # Install individual plugins
-claude /plugin install zotero-connector@agent-contract
-claude /plugin install pdf2markdown-converter@agent-contract
-claude /plugin install work-journal@agent-contract
+/plugin install zotero-connector@FuZhiyu-AgentContract
+/plugin install pdf2markdown-converter@FuZhiyu-AgentContract
+/plugin install work-journal@FuZhiyu-AgentContract
 ```
 
 ### Direct Installation (local development)
 
 ```bash
-claude /plugin install ./plugins/zotero-connector
+/plugin install ./plugins/zotero-connector
 ```
 
 ## Updating Plugins
 
 ```bash
-# Update a single plugin
-claude plugin update zotero-connector@agent-contract
-
-# Update all plugins from this marketplace
-claude /plugin marketplace update agent-contract
+# Update marketplace listing
+/plugin marketplace update FuZhiyu-AgentContract
 ```
 
 ## Configuration

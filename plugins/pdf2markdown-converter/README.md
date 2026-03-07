@@ -13,7 +13,7 @@ Convert PDFs to Markdown using the Mistral OCR API with automatic image extracti
 ## Install
 
 ```bash
-claude /plugin install pdf2markdown-converter@agent-contract
+/plugin install pdf2markdown-converter@FuZhiyu-AgentContract
 ```
 
 ## Usage

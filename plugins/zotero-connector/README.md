@@ -27,7 +27,7 @@ ZOTERO_LIBRARY_ID=12345
 ## Install
 
 ```bash
-claude /plugin install zotero-connector@agent-contract
+/plugin install zotero-connector@FuZhiyu-AgentContract
 ```
 
 ## Usage
