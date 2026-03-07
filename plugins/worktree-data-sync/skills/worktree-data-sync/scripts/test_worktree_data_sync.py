@@ -130,9 +130,10 @@ class TestSeedDiffApply:
         assert summary.copied >= 1
         assert (target / "output" / "new.csv").exists()
         assert (target / "output" / "result.csv").read_text(encoding="utf-8") == "local,keep\n"
-        assert not (target / "data").exists()
+        assert (target / "data").is_symlink()
+        assert (target / "data").resolve() == (main / "data").resolve()
 
-    def test_seed_force_cow_copies_shared_only_roots(self, repo_with_worktrees):
+    def test_seed_force_cow_copies_symlink_only_roots(self, repo_with_worktrees):
         main = repo_with_worktrees["main"]
         target = repo_with_worktrees["a"]
 

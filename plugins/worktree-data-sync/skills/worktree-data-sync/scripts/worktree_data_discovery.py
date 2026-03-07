@@ -128,7 +128,7 @@ def _is_under(base: str, maybe_child: str) -> bool:
     return maybe_child == base or maybe_child.startswith(base + "/")
 
 
-def _is_shared_only(path: str, shared_roots: set[str]) -> bool:
+def _is_symlink_only(path: str, shared_roots: set[str]) -> bool:
     return any(_is_under(root, path) for root in shared_roots)
 
 
@@ -203,7 +203,7 @@ def discover_managed_entries(source_worktree: Path) -> list[dict]:
             "path": path,
             "source": str(source),
             "entry_kind": kind,
-            "shared_only": _is_shared_only(path, shared_roots),
+            "symlink_only": _is_symlink_only(path, shared_roots),
         }
         priority[path] = origin_priority
 
@@ -272,6 +272,6 @@ def discover_managed_entries(source_worktree: Path) -> list[dict]:
         if not resolved.exists():
             continue
         add_entry(root, resolved, origin_priority=40)
-        by_path[root]["shared_only"] = True
+        by_path[root]["symlink_only"] = True
 
     return [by_path[path] for path in sorted(by_path)]

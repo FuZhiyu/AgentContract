@@ -204,12 +204,13 @@ def run_seed(
     summary = SeedSummary()
 
     for entry in entries:
-        if seed_sync_mode == "auto" and entry.get("shared_only", False):
-            continue
-
         source_path = Path(entry["source"])
         destination_path = destination_root / entry["path"]
         entry_kind = entry.get("entry_kind", "directory")
+
+        if seed_sync_mode == "auto" and entry.get("symlink_only", False):
+            symlink_missing_entry(source_path, destination_path, summary, dry_run=dry_run)
+            continue
 
         if seed_sync_mode == "force-symlink":
             symlink_missing_entry(source_path, destination_path, summary, dry_run=dry_run)
@@ -375,7 +376,7 @@ def collect_changes(
     all_changes: list[FileChange] = []
 
     for entry in entries:
-        if entry.get("shared_only", False):
+        if entry.get("symlink_only", False):
             continue
 
         entry_path = entry["path"]
@@ -467,7 +468,7 @@ def _safe_join_under(base: Path, relative: Path) -> Path:
 def _allowed_source_roots(entries: list[dict]) -> list[Path]:
     roots: list[Path] = []
     for entry in entries:
-        if entry.get("shared_only", False):
+        if entry.get("symlink_only", False):
             continue
         roots.append(Path(entry["source"]).resolve(strict=False))
     return roots
@@ -608,7 +609,7 @@ def process_from_json(
 
 def _find_entry_for_relative_path(entries: list[dict], rel_path: Path) -> dict | None:
     candidates = sorted(
-        [entry for entry in entries if not entry.get("shared_only", False)],
+        [entry for entry in entries if not entry.get("symlink_only", False)],
         key=lambda entry: len(Path(entry["path"]).parts),
         reverse=True,
     )

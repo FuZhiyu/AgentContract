@@ -31,7 +31,7 @@ python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py --to <wo
 
 ## `.gitignore` annotations
 
-You can mark ignored roots as shared-only using either tag:
+You can mark ignored roots as symlink-only using either tag:
 
 ```gitignore
 Data/
@@ -50,7 +50,7 @@ Data/  # worktree:symlink
 - `seed`: materialize missing managed files from source to destination
   - default `--seed-sync-mode auto`: preserve current per-path behavior
   - `--seed-sync-mode force-symlink`: create top-level symlinks for managed roots when the destination path does not already exist
-  - `--seed-sync-mode force-cow`: copy/COW all managed roots, including shared-only annotated paths
+  - `--seed-sync-mode force-cow`: copy/COW all managed roots, including symlink-only annotated paths
 - `diff`: report source-to-destination deltas (`new`, `modified`, `unchanged`)
 - `apply`: execute `overwrite` or `rename` actions on selected changes
 
@@ -70,7 +70,7 @@ python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --mode seed \
   --seed-sync-mode force-symlink
 
-# 3) Seed using copy/COW for all managed roots, including shared-only ones
+# 3) Seed using copy/COW for all managed roots, including symlink-only ones
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \

@@ -10,5 +10,5 @@ Plugin for syncing non-git data between existing git worktrees. Does not create/
 ## Key Concepts
 
 - **Managed paths**: discovered statelessly from `.gitignore`, tracked symlinks, and annotations
-- **Shared-only roots**: annotated with `# data-sync:symlink` (or legacy `# worktree:symlink`); excluded from copy/apply by default
+- **Symlink-only roots**: annotated with `# data-sync:symlink` (or legacy `# worktree:symlink`); excluded from copy/apply by default
 - **Seed sync modes**: `auto` (default), `force-symlink`, `force-cow` -- control how missing data is materialized

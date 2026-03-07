@@ -48,9 +48,9 @@ Rules:
 
 Optional: `--seed-sync-mode <auto|force-symlink|force-cow>` (default: `auto`)
 
-- `auto`: preserve current per-path behavior (shared-only roots get symlinks, others get copies)
+- `auto`: preserve current per-path behavior (symlink-only roots get symlinks, others get copies)
 - `force-symlink`: create top-level symlinks for all managed roots when the destination path does not already exist; conflicting paths are skipped
-- `force-cow`: copy/COW all managed roots, including shared-only annotated paths
+- `force-cow`: copy/COW all managed roots, including symlink-only annotated paths
 
 `--seed-sync-mode` is only valid with `--mode seed`; the CLI rejects it for other modes.
 
@@ -88,13 +88,13 @@ Discovery is stateless and source-driven. Managed roots come from:
 - gitignored paths via `git ls-files --others --ignored --exclude-standard --directory`
 - tracked symlinks that resolve outside the repo
 - top-level symlink safety net
-- `.gitignore` shared-only annotations
+- `.gitignore` symlink-only annotations
 
 Supported annotations:
 - preferred: `# data-sync:symlink`
 - legacy: `# worktree:symlink`
 
-Shared-only roots are excluded from copy/apply actions.
+Symlink-only roots are symlinked in seed auto mode and excluded from diff/apply actions.
 
 ## Examples
 
@@ -110,7 +110,7 @@ python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --mode seed \
   --seed-sync-mode force-symlink
 
-# Seed using copy/COW for all managed roots (including shared-only)
+# Seed using copy/COW for all managed roots (including symlink-only)
 python3 .claude/skills/worktree-data-sync/scripts/sync_worktree_data.py \
   --to ../MyRepo-feature \
   --mode seed \
