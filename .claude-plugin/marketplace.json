@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "agent-contract",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Academic research plugins for economics and finance: paper reading, documentation, review, and git workflows",
   "repository": "https://github.com/FuZhiyu/AgentContract",
   "owner": {
@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "zotero-connector",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Read and analyze academic papers from Zotero library",
       "author": {
         "name": "Julie Fu"
@@ -20,7 +20,7 @@
     },
     {
       "name": "pdf2markdown-converter",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
       "author": {
         "name": "Julie Fu"
@@ -30,7 +30,7 @@
     },
     {
       "name": "work-journal",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Working journal creation and documentation quality for academic research",
       "author": {
         "name": "Julie Fu"
@@ -40,7 +40,7 @@
     },
     {
       "name": "worktree-data-sync",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Sync non-git data between existing git worktrees",
       "author": {
         "name": "Julie Fu"
@@ -50,7 +50,7 @@
     },
     {
       "name": "review-doc-commit",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Review code, update documentation, and create well-organized topical git commits",
       "author": {
         "name": "Julie Fu"
@@ -60,7 +60,7 @@
     },
     {
       "name": "draft-reviewer",
-      "version": "0.3.1",
+      "version": "0.3.2",
       "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
       "author": {
         "name": "Julie Zhiyu Fu"

@@ -1,6 +1,6 @@
 {
   "name": "review-doc-commit",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Review code, update documentation, and create well-organized topical git commits",
   "author": {
     "name": "Zhiyu Fu"
