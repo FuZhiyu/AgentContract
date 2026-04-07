@@ -12,7 +12,8 @@ plugins/           # Individual plugins, each with its own plugin manifest direc
   ├── work-journal/
   ├── worktree-data-sync/
   ├── draft-reviewer/
-  └── review-doc-commit/
+  ├── review-doc-commit/
+  └── wrds-data/
 shared/            # Shared utilities (canonical reference; each plugin carries its own copy)
   └── config.py    # Config loader for .claude/agent-contract.yaml
 ```
@@ -123,4 +124,5 @@ The canonical reference is `shared/config.py`. When updating config logic, sync 
 | `draft-reviewer` | Skill + Agents | Multi-agent paper review system |
 | `review-doc-commit` | Skill + Agents | Parallel review, documentation, and topical git commits |
 | `worktree-data-sync` | Skill | Sync non-git data across existing worktrees |
+| `wrds-data` | Skill | Search and download financial data from WRDS (CRSP, Compustat, IBES, etc.) |
 | `project-setup` | Skill | Creates two-folder research project structure; repo-local on Claude and included in the repo-scoped Codex marketplace |

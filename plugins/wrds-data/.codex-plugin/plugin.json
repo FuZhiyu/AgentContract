@@ -1,0 +1,27 @@
+{
+  "name": "wrds-data",
+  "version": "0.1.0",
+  "description": "Search and download financial data from WRDS (Wharton Research Data Services)",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/wrds-data",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["research", "wrds", "finance", "data", "crsp", "compustat"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "WRDS Data",
+    "shortDescription": "Search and download data from WRDS.",
+    "longDescription": "Browse WRDS libraries and tables, query datasets (CRSP, Compustat, IBES, etc.), and download financial data with date and variable filters.",
+    "developerName": "Zhiyu Fu",
+    "category": "Research",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/wrds-data",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use WRDS Data to download CRSP daily stock returns for 2020-2023."
+    ]
+  }
+}

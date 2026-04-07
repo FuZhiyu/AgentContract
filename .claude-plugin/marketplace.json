@@ -67,6 +67,16 @@
       },
       "source": "./plugins/draft-reviewer",
       "category": "research"
+    },
+    {
+      "name": "wrds-data",
+      "version": "0.1.0",
+      "description": "Search and download financial data from WRDS (Wharton Research Data Services)",
+      "author": {
+        "name": "Julie Zhiyu Fu"
+      },
+      "source": "./plugins/wrds-data",
+      "category": "research"
     }
   ]
 }

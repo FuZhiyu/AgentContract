@@ -87,6 +87,18 @@
         "authentication": "ON_INSTALL"
       },
       "category": "Development"
+    },
+    {
+      "name": "wrds-data",
+      "source": {
+        "source": "local",
+        "path": "./plugins/wrds-data"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
     }
   ]
 }

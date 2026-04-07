@@ -1,0 +1,11 @@
+{
+  "name": "wrds-data",
+  "version": "0.1.0",
+  "description": "Search and download financial data from WRDS (Wharton Research Data Services)",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["research", "wrds", "finance", "data", "crsp", "compustat"]
+}
