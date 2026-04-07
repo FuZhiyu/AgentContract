@@ -1,6 +1,6 @@
 {
   "name": "pdf2markdown-converter",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
   "author": {
     "name": "Zhiyu Fu"

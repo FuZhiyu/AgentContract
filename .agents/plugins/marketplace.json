@@ -1,0 +1,92 @@
+{
+  "name": "agent-contract-local",
+  "interface": {
+    "displayName": "AgentContract Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "project-setup",
+      "source": {
+        "source": "local",
+        "path": "./plugins/project-setup"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    },
+    {
+      "name": "zotero-connector",
+      "source": {
+        "source": "local",
+        "path": "./plugins/zotero-connector"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    },
+    {
+      "name": "pdf2markdown-converter",
+      "source": {
+        "source": "local",
+        "path": "./plugins/pdf2markdown-converter"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    },
+    {
+      "name": "work-journal",
+      "source": {
+        "source": "local",
+        "path": "./plugins/work-journal"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    },
+    {
+      "name": "draft-reviewer",
+      "source": {
+        "source": "local",
+        "path": "./plugins/draft-reviewer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    },
+    {
+      "name": "worktree-data-sync",
+      "source": {
+        "source": "local",
+        "path": "./plugins/worktree-data-sync"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    },
+    {
+      "name": "review-doc-commit",
+      "source": {
+        "source": "local",
+        "path": "./plugins/review-doc-commit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Development"
+    }
+  ]
+}

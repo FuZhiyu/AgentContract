@@ -1,0 +1,27 @@
+{
+  "name": "draft-reviewer",
+  "version": "0.3.3",
+  "description": "Multi-agent academic paper review with mathematical, writing, consistency, and proofreading analysis",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/draft-reviewer",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["research", "paper-review", "academic", "proofreading", "writing"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Draft Reviewer",
+    "shortDescription": "Review academic drafts with specialized checks.",
+    "longDescription": "Run a structured review of an academic draft with coverage for mathematical correctness, writing clarity, internal consistency, citations, and proofreading.",
+    "developerName": "Zhiyu Fu",
+    "category": "Research",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/draft-reviewer",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use Draft Reviewer to review this draft paper for mathematical, writing, and citation issues."
+    ]
+  }
+}

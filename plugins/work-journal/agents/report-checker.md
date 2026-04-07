@@ -115,7 +115,7 @@ Flag if report contains:
 
 ## Reporting Format
 
-Use TodoWrite to track issues found:
+Track issues in a plain checklist:
 
 ```
 - [ ] Front matter missing git_commit

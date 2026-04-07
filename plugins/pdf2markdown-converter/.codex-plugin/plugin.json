@@ -1,0 +1,27 @@
+{
+  "name": "pdf2markdown-converter",
+  "version": "0.4.1",
+  "description": "Convert PDFs to Markdown using Mistral OCR API with image extraction",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/pdf2markdown-converter",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["pdf", "markdown", "ocr", "mistral", "research"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "PDF to Markdown Converter",
+    "shortDescription": "Extract structured Markdown from PDFs.",
+    "longDescription": "Convert PDFs into Markdown with image extraction through the Mistral OCR workflow, especially for scanned or layout-heavy academic documents.",
+    "developerName": "Zhiyu Fu",
+    "category": "Research",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/pdf2markdown-converter",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use PDF to Markdown Converter to extract this PDF into Markdown with images."
+    ]
+  }
+}

@@ -63,8 +63,10 @@ Execute the project creation script:
 
 ```bash
 cd /path/to/target/location
-bash "${CLAUDE_SKILL_DIR}/scripts/create_project.sh" "ProjectName"
+bash <skill-dir>/scripts/create_project.sh "ProjectName"
 ```
+
+Replace `<skill-dir>` with the directory that contains this `SKILL.md`.
 
 The script will:
 1. Create `ProjectName-Share/` with Notes, Data, Output directories
@@ -72,7 +74,7 @@ The script will:
 3. Set up Python environment with uv
 4. Create symlinks between the two folders
 5. Initialize git repository
-6. Copy Claude configuration (.claude folder with agents/skills)
+6. Copy the template's guidance/config files, including `.claude/` and the `AGENTS.md` compatibility link when present
 
 ### Step 4: Post-Creation
 
@@ -105,4 +107,4 @@ project-setup:
 - The script requires macOS (uses `sed -i ''` syntax)
 - Requires `uv` for Python environment management (installed via Homebrew)
 - Creates initial git commit automatically
-- Copies Claude agents and skills to new project
+- Copies the template's assistant guidance/config files into the new project

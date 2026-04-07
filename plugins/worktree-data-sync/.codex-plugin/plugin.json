@@ -1,0 +1,27 @@
+{
+  "name": "worktree-data-sync",
+  "version": "0.4.1",
+  "description": "Sync non-git data between existing git worktrees",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/worktree-data-sync",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["git", "worktree", "data-sync", "development"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Worktree Data Sync",
+    "shortDescription": "Compare and sync non-git worktree data.",
+    "longDescription": "Seed, diff, and apply changes for managed non-git files across existing worktrees without touching git branches or worktree creation.",
+    "developerName": "Zhiyu Fu",
+    "category": "Development",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/worktree-data-sync",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use Worktree Data Sync to compare non-git data between these two worktrees."
+    ]
+  }
+}

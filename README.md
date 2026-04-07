@@ -1,27 +1,53 @@
 # AgentContract
 
-Skills and agents designed for academic research workflows, econ-flavored. Made by Claude, for Claude. For Codex, see below for installation instructions. 
+Academic research plugins and skills for both Claude Code and Codex. Claude marketplace support stays intact. Codex support now includes repo-scoped plugin manifests and a local marketplace for private or team distribution.
 
-## Available Skills
+## Available Plugins
 
-| Skills | Description |
+| Plugin | Description |
 |--------|-------------|
-| `worktree-data-sync` | multi-agent work in parallel in different worktrees with isolated data |
-| `work-journal` | Teach agents how to document and report the results |
-| `draft-reviewer` | Comprehensive review of a paper draft. Even better, it can fixes things |
-| `review-doc-commit` | Make sure we commit the right stuff |
-| `zotero-connector` | Read papers from Zotero library |
-| `pdf2markdown-converter` | Convert PDFs to markdown via Mistral OCR |
+| `project-setup` | Create a new research project with the expected repo/share structure |
+| `zotero-connector` | Read papers from Zotero and summarize them in Markdown |
+| `pdf2markdown-converter` | Convert PDFs to Markdown with Mistral OCR and image extraction |
+| `work-journal` | Write formal work journals or quick Markdown reports for completed analysis |
+| `draft-reviewer` | Run structured academic draft review across writing, math, and citations |
+| `worktree-data-sync` | Compare and sync non-git data between existing worktrees |
+| `review-doc-commit` | Review changes, update docs, and prepare topical git commits |
 
-## Prerequisites
+## Codex
+
+Codex plugin distribution in this repo is currently aimed at private or team use through a repo-scoped marketplace. Official public Codex directory publishing is not self-serve yet.
+
+### Preferred Codex install path
+
+1. Clone this repository locally.
+2. Open the repo in Codex.
+3. Restart Codex so it reloads the repo marketplace at `.agents/plugins/marketplace.json`.
+4. Open the Plugins panel or run `/plugins`.
+5. Select the `AgentContract Local Plugins` marketplace.
+6. Install the plugin you want.
+
+Bundled skills are available immediately after plugin install. Workflows that depend on standalone reviewer/worker roles still require the advanced installer in [CODEX_INSTALL.md](CODEX_INSTALL.md).
+
+### Validate manifests before release
+
+```bash
+python3 scripts/validate_plugin_manifests.py
+```
+
+### Advanced Codex fallback
+
+Use [CODEX_INSTALL.md](CODEX_INSTALL.md) only when you need standalone agent roles installed into `.codex/agents` or you want the older copy/symlink skill installer flow.
+
+## Claude Code
+
+### Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- [`uv`](https://docs.astral.sh/uv/) — Python scripts use PEP 723 inline metadata for auto-installing dependencies
-- API keys per plugin (see individual plugin docs)
+- [`uv`](https://docs.astral.sh/uv/) for skill scripts with PEP 723 inline dependencies
+- API keys per plugin where required
 
-## Installation
-
-### From GitHub
+### Install from the Claude marketplace
 
 ```bash
 # Add marketplace
@@ -33,22 +59,24 @@ Skills and agents designed for academic research workflows, econ-flavored. Made 
 /plugin install work-journal@FuZhiyu-AgentContract
 ```
 
-### Direct Installation (local development)
+`project-setup` is currently repo-local/direct install only on the Claude side.
+
+### Direct installation for local development
 
 ```bash
 /plugin install ./plugins/zotero-connector
+/plugin install ./plugins/project-setup
 ```
 
-## Updating Plugins
+### Update the Claude marketplace listing
 
 ```bash
-# Update marketplace listing
 /plugin marketplace update FuZhiyu-AgentContract
 ```
 
-## Configuration
+## Shared Configuration
 
-Create `.claude/agent-contract.yaml` (per-project) or `~/.config/agent-contract/config.yaml` (global):
+Several plugins read shared config from `.claude/agent-contract.yaml` (project) or `~/.config/agent-contract/config.yaml` (global):
 
 ```yaml
 paper-reader:
@@ -58,49 +86,16 @@ paper-reader:
   zotero_library_id: "12345"
 ```
 
-## Plugin Details
+Some plugins also support environment-variable alternatives. Check the plugin-specific README where needed.
 
-### zotero-connector
-- Search Zotero by title/author/topic
-- Download PDFs from local storage or web API
-- Integrates with pdf2markdown-converter
-- **Requires:** Zotero API key, library ID
+## Plugin Notes
 
-### pdf2markdown-converter
-- Convert PDFs to markdown using Mistral OCR
-- Extract images to separate folder
-- Great for scanned documents
-- **Requires:** Mistral API key
-
-### work-journal
-- `work-journal` skill: formal, fact-checked journal entries with citations and report-checker verification
-- `report-in-markdown` skill: pure IO tool for saving markdown reports (no content rules)
-- Agents: code-reviewer, report-checker, results-summarizer
-
-### worktree-data-sync
-- Sync non-git files between existing worktrees
-- Seed missing managed files from one worktree to another
-- Diff and apply overwrite/rename actions for managed data
-
-### draft-reviewer
-- Multi-agent paper review system
-- Specialized agents: mathematical, writing, consistency, proofreading, citations
-- Supports quick, standard, and deep (parallel) thoroughness levels
-- Integrates with pdf2markdown-converter for PDF input
-
-### review-doc-commit
-- Two-agent code review: implementation correctness + integration/consistency
-- Ensure CLAUDE.md coverage for all directories with AGENTS.md symlinks
-- Hard gate: no commit until review is clean
-- Group changes into topical commits
-
-## Codex
-
-Tell Codex:
-
-> Fetch and follow instructions from https://raw.githubusercontent.com/FuZhiyu/AgentContract/main/CODEX_INSTALL.md
-
-Detailed docs: [CODEX_INSTALL.md](CODEX_INSTALL.md)
+- `zotero-connector`: requires Zotero credentials and integrates with `pdf2markdown-converter`.
+- `zotero-connector`: Codex v1 assumes Zotero tools are already available in the session, or that the user can supply an attachment key/local PDF path.
+- `pdf2markdown-converter`: requires a Mistral API key.
+- `work-journal`: ships `work-journal` and `report-in-markdown`; standalone review roles remain on the advanced installer path for Codex.
+- `draft-reviewer`: ships the review skill in the Codex plugin and keeps standalone reviewer agents on the advanced installer path.
+- `review-doc-commit`: Codex plugin ships the main skill; standalone agents stay installer-managed.
 
 ## License
 

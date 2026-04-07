@@ -1,6 +1,6 @@
 ---
 name: zotero-paper-reader
-description: Read and analyze academic papers from Zotero library. Use when the user requests to read, access, or analyze a paper by title, author, or topic from their Zotero library. Automatically searches Zotero, converts PDFs to markdown, saves to Notes/PaperInMarkdown, and provides analysis.
+description: Read and analyze academic papers from Zotero library. Use when the user requests to read, access, or analyze a paper by title, author, or topic from their Zotero library. Searches Zotero when Zotero tools are available, converts PDFs to Markdown, saves to Notes/PaperInMarkdown, and provides analysis.
 user-invocable: true
 ---
 
@@ -23,7 +23,7 @@ Use this skill when the user requests to:
 
 ### Step 1: Search Zotero Library
 
-Use the Zotero MCP tools to search for the paper:
+If Zotero tools are available in the current session, use them to search for the paper:
 
 ```python
 # Search by title, author, or keywords
@@ -31,6 +31,11 @@ mcp__zotero__zotero_search_items(query="paper title or author", limit=5)
 ```
 
 Present the search results to the user if multiple papers are found. Get the `item_key` from the selected paper.
+
+If Zotero tools are not available, ask the user for one of these instead:
+- a Zotero attachment key
+- a local PDF path
+- enough information to locate the PDF manually in local Zotero storage
 
 ### Step 2: Get PDF Attachment
 
@@ -48,8 +53,10 @@ Look for the attachment with `type: application/pdf` and note its `Key` (attachm
 Use the bundled script to get the PDF - it automatically tries local storage first, then downloads if needed:
 
 ```bash
-uv run python ${CLAUDE_SKILL_DIR}/scripts/get_zotero_pdf.py ATTACHMENT_KEY
+uv run python <skill-dir>/scripts/get_zotero_pdf.py ATTACHMENT_KEY
 ```
+
+Replace `<skill-dir>` with the directory that contains this `SKILL.md`.
 
 The script workflow:
 1. First searches local Zotero storage (`~/Zotero/storage/ATTACHMENT_KEY/`)
@@ -61,13 +68,11 @@ The script workflow:
 
 ### Step 4: Convert to Markdown
 
-Use the `mistral-pdf-to-markdown` skill (a separate plugin) to convert the PDF. Invoke it via the Skill tool:
+Use the `mistral-pdf-to-markdown` skill (a separate plugin) if it is installed. Explicitly invoke that skill by name and convert `PATH_TO_PDF` to `Notes/PaperInMarkdown/CLEAN_FILENAME.md`.
 
-```
-Skill(skill="mistral-pdf-to-markdown")
-```
-
-Then follow its instructions to convert the PDF at `PATH_TO_PDF` to `Notes/PaperInMarkdown/CLEAN_FILENAME.md`.
+If that skill is not installed, either:
+- use another local PDF-to-text workflow that preserves enough structure for the user's request, or
+- tell the user that the richer OCR path requires the `mistral-pdf-to-markdown` plugin
 
 **Filename convention:** Create a clean filename from the paper metadata:
 - Format: `Author_Year_Title.md`
@@ -76,16 +81,9 @@ Then follow its instructions to convert the PDF at `PATH_TO_PDF` to `Notes/Paper
 
 ### Step 5: Read and Analyze
 
-Read the converted markdown file:
-
-```python
-# For large papers, read in sections
-Read(file_path="Notes/PaperInMarkdown/FILENAME.md", offset=1, limit=500)
-```
-
-Since academic papers are often large (>25k tokens), read strategically:
+Read the converted markdown file in sections. Since academic papers are often large (>25k tokens), read strategically:
 - Start with abstract and introduction (first 300-500 lines)
-- Use Grep to search for specific sections if needed
+- Search for specific sections if needed
 - Read specific sections based on user interest
 
 Provide the user with:
@@ -101,15 +99,16 @@ Provide the user with:
 **Workflow:**
 1. Search: `mcp__zotero__zotero_search_items(query="Are Intermediary Constraints Priced")`
 2. Get attachment: `mcp__zotero__zotero_get_item_children(item_key="KPRQ2DLZ")`
-3. Get PDF: `uv run python ${CLAUDE_SKILL_DIR}/scripts/get_zotero_pdf.py 2HSELEHX`
+3. Get PDF: `uv run python <skill-dir>/scripts/get_zotero_pdf.py 2HSELEHX`
    - Returns local path if available, or downloads and returns temp path
 4. Convert: Invoke `mistral-pdf-to-markdown` skill to convert `[PDF_PATH]` → `Notes/PaperInMarkdown/Du_et_al_2023_Are_Intermediary_Constraints_Priced.md`
-5. Read: `Read(file_path="Notes/PaperInMarkdown/Du_et_al_2023_Are_Intermediary_Constraints_Priced.md", limit=500)`
+5. Read the Markdown file in chunks, starting with the abstract and introduction
 6. Summarize and offer to dive deeper into specific sections
 
 ## Notes
 
 - The skill works with both local and web Zotero libraries
+- Automatic Zotero discovery requires Zotero tools in the current Codex session; otherwise the user must provide an attachment key or PDF path
 - For web libraries, requires `ZOTERO_API_KEY`, `ZOTERO_LIBRARY_TYPE`, and `ZOTERO_LIBRARY_ID` in `Notes/.env`
 - For local libraries, Zotero local API must be enabled in Zotero preferences
 - Requires Mistral API key in `Notes/.env` for PDF conversion

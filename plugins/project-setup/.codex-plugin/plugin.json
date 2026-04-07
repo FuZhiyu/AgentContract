@@ -1,0 +1,27 @@
+{
+  "name": "project-setup",
+  "version": "0.4.1",
+  "description": "Create new research projects from template with two-folder architecture",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/project-setup",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["research", "project-template", "economics", "academic"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Project Setup",
+    "shortDescription": "Create a new research project scaffold.",
+    "longDescription": "Set up a new academic research project with the repository/share split, base folders, and starter configuration expected by this workflow.",
+    "developerName": "Zhiyu Fu",
+    "category": "Research",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/project-setup",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use Project Setup to create a new research project called EventStudy."
+    ]
+  }
+}

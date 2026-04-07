@@ -29,9 +29,9 @@ Read the code to understand:
 - What level is the analysis? (fund-level, security-level, aggregate?)
 - What are the key quantities being measured?
 
-### Step 2: Check CLAUDE.md Compliance
+### Step 2: Check Project Guidance
 
-Review against project conventions:
+Review against project guidance documents (`AGENTS.md`, `CLAUDE.md`, README, or equivalent):
 - Uses relative paths (not absolute)
 - Interactive code with `# %%` cells
 - Minimal functions/compartmentalization
@@ -147,7 +147,7 @@ holdings_agg = holdings.groupby('asset_class')['value'].sum()
 
 ### Step 5: Project Guidelines
 
-From CLAUDE.md:
+From the project's guidance docs:
 
 - [ ] **Relative paths**: Uses `Data/`, `Output/`, not `/Users/.../`
 - [ ] **Interactive**: Has `# %%` cell separators
@@ -162,7 +162,7 @@ From CLAUDE.md:
 
 ## Reporting Format
 
-Use TodoWrite to categorize issues:
+Categorize issues in a plain checklist:
 
 ```
 Critical (Data Integrity):

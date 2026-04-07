@@ -1,12 +1,12 @@
 # AgentContract
 
-A Claude Code plugin marketplace providing tools for academic research workflows. Each plugin is self-contained and can be installed independently.
+A plugin workspace for academic research workflows across Claude Code and Codex. Each plugin is self-contained and can be installed independently.
 
 ## Structure
 
 ```
-plugins/           # Individual plugins, each with its own .claude-plugin/
-  ├── project-setup/       (not in marketplace yet)
+plugins/           # Individual plugins, each with its own plugin manifest directory
+  ├── project-setup/
   ├── zotero-connector/
   ├── pdf2markdown-converter/
   ├── work-journal/
@@ -25,7 +25,9 @@ Each plugin follows this layout:
 ```
 plugin-name/
 ├── .claude-plugin/
-│   └── plugin.json      # Plugin metadata, hooks, permissions
+│   └── plugin.json      # Claude plugin metadata, hooks, permissions
+├── .codex-plugin/
+│   └── plugin.json      # Codex plugin metadata and interface fields
 ├── skills/
 │   └── skill-name/
 │       ├── SKILL.md     # Skill instructions
@@ -91,7 +93,7 @@ tools: [Read, Grep, Glob, Bash]
 
 ### Releasing Changes
 
-Always bump `version` in plugin.json before pushing. Claude Code caches by version — unchanged versions won't update for users. Also bump the marketplace version in `.claude-plugin/marketplace.json`.
+Always bump shipped plugin manifest versions before pushing. Claude Code caches by version, and Codex plugin manifests should stay in sync with the corresponding Claude manifest. Also bump the Claude marketplace version in `.claude-plugin/marketplace.json` when published marketplace entries change, and keep `.agents/plugins/marketplace.json` aligned with the repo-scoped Codex marketplace contents.
 
 ### Testing
 
@@ -121,4 +123,4 @@ The canonical reference is `shared/config.py`. When updating config logic, sync 
 | `draft-reviewer` | Skill + Agents | Multi-agent paper review system |
 | `review-doc-commit` | Skill + Agents | Parallel review, documentation, and topical git commits |
 | `worktree-data-sync` | Skill | Sync non-git data across existing worktrees |
-| `project-setup` | Skill | Creates two-folder research project structure (not in marketplace yet) |
+| `project-setup` | Skill | Creates two-folder research project structure; repo-local on Claude and included in the repo-scoped Codex marketplace |

@@ -1,10 +1,23 @@
-# Codex Install Guide
+# Codex Advanced Install Guide
 
-**This file is meant to be read by an agent (Codex).** Ask Codex to read this file for installation.
+**This file is meant to be read by an agent (Codex).** Use it for the advanced fallback path when you need standalone agent roles or manual skill installation.
 
-This repository is structured for Claude plugins. This guide shows how to install the same skills for Codex, with project-scoped config under `./.codex/`.
+For most users, the preferred Codex path is now the repo marketplace:
+
+1. Clone the repository.
+2. Open it in Codex.
+3. Restart Codex so it reloads `.agents/plugins/marketplace.json`.
+4. Open the Plugins panel or run `/plugins`.
+5. Choose `AgentContract Local Plugins`.
+6. Install the plugin you want.
+
+That marketplace path installs bundled skills only. If you want standalone reviewer/worker roles such as `draft-reviewer__mathematical-reviewer` or `work-journal__report-checker`, use this advanced installer.
+
+This guide remains for the advanced fallback path: install skills into `.agents/skills` and install standalone reviewer/worker roles into `.codex/agents`.
 
 ## What This Supports
+
+This guide covers the advanced fallback installer only. It can:
 
 - Install plugin skills into project-local `./.agents/skills/` (or user `~/.agents/skills/`)
 - Update Codex config with `[[skills.config]]` entries
@@ -12,13 +25,14 @@ This repository is structured for Claude plugins. This guide shows how to instal
   - write role files to `./.codex/agents/*.toml` (or `~/.codex/agents/*.toml`)
   - add `[agents.<role>]` entries in `config.toml`
   - enable `[features].multi_agent = true`
+  - register role names in `plugin__agent` form; these are the `agent_type` values Codex uses when spawning
 - Keep setup project-specific by default (`./.codex/config.toml`)
 
 ## Dynamic Discovery
 
 The installer discovers everything directly from the repo:
 
-- Plugins: `plugins/*/.claude-plugin/plugin.json` (`name`)
+- Plugins: `plugins/*/.codex-plugin/plugin.json` (`name`), falling back to `plugins/*/.claude-plugin/plugin.json`
 - Skills: `plugins/*/SKILL.md` and `plugins/*/skills/*/SKILL.md`
 - Agents: `plugins/*/agents/*.md` (frontmatter `name`, fallback to filename)
 
@@ -44,7 +58,7 @@ python3 scripts/install_codex_skills.py --help
 
 ## Agent-Assisted Install Protocol (Required)
 
-When an agent is asked to install Codex skills for this repo, it must follow this flow:
+When an agent is asked to use the advanced installer for this repo, it must follow this flow:
 
 1. Read this file first (`CODEX_INSTALL.md`).
 2. Discover current inventory dynamically:
@@ -140,7 +154,7 @@ then run installation with --source-repo AgentContract --target-root . --scope p
 Do not hardcode plugin or skill names.
 ```
 
-### Default (project-scoped, recommended)
+### Default advanced install (project-scoped)
 
 Run from repo root:
 

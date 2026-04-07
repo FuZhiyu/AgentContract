@@ -1,0 +1,27 @@
+{
+  "name": "review-doc-commit",
+  "version": "0.3.3",
+  "description": "Review code, update documentation, and create well-organized topical git commits",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "homepage": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/review-doc-commit",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "license": "MIT",
+  "keywords": ["git", "code-review", "documentation", "commits"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Review, Document, Commit",
+    "shortDescription": "Review changes and prepare clean commits.",
+    "longDescription": "Review pending changes, update the surrounding guidance docs, and organize the final result into topical commits once the review is clean.",
+    "developerName": "Zhiyu Fu",
+    "category": "Development",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/FuZhiyu/AgentContract/tree/main/plugins/review-doc-commit",
+    "privacyPolicyURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-privacy.md",
+    "termsOfServiceURL": "https://github.com/FuZhiyu/AgentContract/blob/main/docs/codex-plugin-terms.md",
+    "defaultPrompt": [
+      "Use Review, Document, Commit to review these changes and prepare topical commits."
+    ]
+  }
+}

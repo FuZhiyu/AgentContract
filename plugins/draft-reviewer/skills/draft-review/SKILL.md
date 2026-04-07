@@ -1,29 +1,39 @@
 ---
 name: draft-review
-description: "Comprehensive academic paper review using specialized agents. Covers mathematical correctness (with numerical verification), writing clarity, terminology consistency, internal consistency, argumentation, proofreading, and citations. Use when user asks to 'review draft', 'check paper', 'proofread manuscript', or requests feedback on academic writing. Can also verify code-paper consistency when source code is available. Supports thoroughness levels: quick, standard (default), deep (parallel agents)."
+description: "Comprehensive academic paper review covering mathematical correctness, writing clarity, consistency, argumentation, proofreading, and citations. Use when user asks to 'review draft', 'check paper', 'proofread manuscript', or requests feedback on academic writing. Can also verify code-paper consistency when source code is available. Defaults to comprehensive + standard review, with optional deep parallel review when Codex multi-agent support is available."
 user-invocable: true
 ---
 
 # Draft Review Skill
 
-A multi-agent academic paper review system that provides comprehensive feedback across multiple dimensions.
+Review an academic draft rigorously and report issues by severity.
 
-## Usage
+## Inputs
 
-```
-/draft-review path/to/paper.pdf
-/draft-review path/to/paper.tex --code path/to/code/
-```
+- Primary document path: PDF, TeX, Markdown, or plain text
+- Optional code path when the user wants code-paper consistency checks
+- Optional scope override: `comprehensive`, `mathematical`, `writing`, `quick-proof`
+- Optional thoroughness override: `quick`, `standard`, `deep`
+
+If the user does not specify scope or thoroughness, use:
+- Scope: `comprehensive`
+- Thoroughness: `standard`
+
+If the paper path or review target is ambiguous, ask the user a direct plain-language question before proceeding.
 
 ## Review Workflow
 
 ### Phase 1: Document Ingestion
 
-1. **PDF Input**: Convert PDF to markdown using mistral-pdf-to-markdown skill
-2. **TeX Input**: Read tex file directly for mathematical precision
-3. **Code (Optional)**: Index relevant code files if path provided
+1. **PDF input**
+   - Prefer converting the PDF to Markdown with the `mistral-pdf-to-markdown` skill if it is available.
+   - If that skill is not installed, extract text locally or ask the user for a TeX/Markdown source when equation fidelity matters.
+2. **TeX/Markdown input**
+   - Read the source directly. Prefer TeX when mathematical precision matters.
+3. **Code input (optional)**
+   - If the user supplied a code path, identify only the files needed to verify claims, definitions, tables, figures, and empirical procedures.
 
-After ingestion, create a document structure summary:
+After ingestion, create a compact document summary:
 - Paper title and abstract
 - Section structure with approximate lengths
 - List of figures and tables with captions
@@ -31,87 +41,76 @@ After ingestion, create a document structure summary:
 
 ### Phase 2: Review Configuration
 
-Use AskUserQuestion to configure the review:
+Use explicit user instructions when present. Otherwise:
+- `comprehensive`: math, writing, consistency, argumentation, proofreading, citations, and optional code-paper consistency
+- `mathematical`: derivations, equations, proofs, notation
+- `writing`: clarity, structure, terminology
+- `quick-proof`: typos, grammar, formatting
 
-**Question 1: Review Scope**
-```
-header: "Scope"
-question: "Which aspects should I review?"
-options:
-  - label: "Comprehensive (Recommended)"
-    description: "All review aspects: math, writing, consistency, arguments, proofreading, citations"
-  - label: "Mathematical"
-    description: "Focus on derivations, equations, proofs, and notation"
-  - label: "Writing & Clarity"
-    description: "Writing quality, terminology consistency, and structure"
-  - label: "Quick Proof"
-    description: "Typos, grammar, and formatting only"
-multiSelect: false
-```
+Thoroughness levels:
+- `quick`: surface pass focused on highest-probability issues
+- `standard`: one careful pass per relevant category
+- `deep`: parallel or repeated review for maximum coverage
 
-**Question 2: Thoroughness Level**
-```
-header: "Thoroughness"
-question: "How thorough should the review be?"
-options:
-  - label: "Standard (Recommended)"
-    description: "Thorough single-agent review per category"
-  - label: "Quick"
-    description: "Fast surface-level review"
-  - label: "Deep"
-    description: "Multiple parallel agents per category with diverse perspectives for maximum coverage"
-multiSelect: false
-```
+### Phase 3: Optional Agent Delegation
 
-### Phase 3: Dispatch Subagents
+Deep review is optional. Only use multi-agent delegation when all of the following are true:
+- the user explicitly asked for deep, parallel, or multi-agent review, or approved delegation after you proposed it
+- the current Codex session supports multi-agent work
+- the extra review cost is justified by the document complexity
 
-Based on configuration, dispatch appropriate subagents using the Task tool:
+When available, prefer the standalone reviewer roles installed by `scripts/install_codex_skills.py`. Their `agent_type` values are:
 
-| Scope | Agents to Dispatch |
-|-------|-------------------|
-| Comprehensive | All 6 (or 7 if code provided) |
-| Mathematical | mathematical-reviewer only |
-| Writing & Clarity | writing-clarity-reviewer only |
-| Quick Proof | proofreader only |
+| `agent_type` | Purpose |
+|--------------|---------|
+| `draft-reviewer__mathematical-reviewer` | Verify derivations, proofs, equations, notation |
+| `draft-reviewer__writing-clarity-reviewer` | Writing quality and clarity |
+| `draft-reviewer__consistency-checker` | Internal consistency of claims, numbers, terminology |
+| `draft-reviewer__argument-logic-reviewer` | Logical flow and argumentation |
+| `draft-reviewer__proofreader` | Typos, grammar, formatting |
+| `draft-reviewer__citation-checker` | Citation completeness and accuracy |
+| `draft-reviewer__code-paper-consistency` | Verify code matches paper claims (if code provided) |
 
-For each subagent, provide:
-1. **Document Summary** (~500 tokens): Title, abstract, section structure
-2. **Relevant Sections** (~2000-5000 tokens): Only sections pertinent to that agent's focus
-3. **Cross-Reference Index**: Tables, figures, key definitions
+If those installed roles are not present, either:
+- perform the review inline in the main thread, or
+- if the user explicitly requested deep parallel review, spawn generic worker agents with category-specific prompts
 
-#### Example Context for Mathematical Reviewer
-```
-Document: [title], [abstract summary]
-Sections to Review: Appendix A, Appendix B, Section 3 (Model)
-Notation Index: {ζ: elasticity, σ²: variance, β: coefficient, ...}
-Tables Referenced: Table 1 (main estimates), Table B.3 (robustness)
-```
+Never rely on the old `plugin:agent` role syntax.
 
-### Phase 4: Deep Mode - Parallel Agent Strategy
+### Phase 4: Deep Mode Strategy
 
-When thoroughness is "Deep", run 2-3 agents per category with diverse perspectives:
+When thoroughness is `deep`, use one of these approaches:
 
-**Perspective Variations:**
-- Agent A: "Review as a skeptical referee looking for flaws"
-- Agent B: "Review as a constructive mentor suggesting improvements"
-- Agent C: "Review as a domain expert in [specific methodology]"
+1. **Installed-role parallel review**
+   - Spawn one reviewer per relevant category.
+   - For especially important categories, use two complementary perspectives.
+2. **Generic-worker parallel review**
+   - Only if installed roles are unavailable and the user still wants parallel review.
+   - Give each worker a narrowly scoped prompt and a clear output contract.
+3. **Inline fallback**
+   - If multi-agent delegation is unavailable, do the same review categories yourself in sequence.
 
-**Focus Ordering Variations:**
-- Agent A: Start from beginning, work forward
-- Agent B: Start from conclusions, trace claims backward
-- Agent C: Start from most complex/critical section
+Useful perspective variations:
+- Reviewer A: skeptical referee looking for flaws
+- Reviewer B: constructive mentor suggesting improvements
+- Reviewer C: domain specialist focusing on the method that matters most
 
-After parallel runs, merge findings:
-- Deduplicate similar issues
-- Flag issues found by multiple agents as higher confidence
-- Include unique findings (may catch edge cases)
+Useful traversal variations:
+- Start from beginning and work forward
+- Start from conclusions and trace claims backward
+- Start from the most technical section first
+
+After any delegated runs, merge findings:
+- Deduplicate overlapping issues
+- Mark issues found by multiple reviewers as higher confidence
+- Keep unique findings that may catch edge cases
 
 ### Phase 5: Result Aggregation
 
-Collect all subagent outputs and organize by severity:
+Collect all findings and organize by severity:
 
 **Critical (Priority 1):**
-- Mathematical errors in proofs/derivations
+- Mathematical errors in proofs or derivations
 - Contradictory claims
 - Missing critical references
 - Data inconsistencies affecting results
@@ -122,91 +121,64 @@ Collect all subagent outputs and organize by severity:
 - Significant notation inconsistencies
 - Writing clarity issues affecting comprehension
 
-**Minor (Priority 3) - Potentially Auto-fixable:**
+**Minor (Priority 3):**
 - Typos and grammatical errors
 - Minor formatting issues
 - Small notation inconsistencies
 - Reference format issues
 
-### Phase 6: Task Generation (User Permission Required)
+### Phase 6: Actionable Follow-up
 
-Present summary to user:
-```
-Review complete. Found:
-- X Critical issues
-- Y Major issues
-- Z Minor issues (N auto-fixable)
-```
+If the user wants a follow-up plan, provide a plain Markdown checklist grouped by severity instead of assuming a task-management tool exists.
 
-Use AskUserQuestion:
-```
-header: "Tasks"
-question: "Would you like me to create tasks for auto-fixable minor issues?"
-options:
-  - label: "Yes, create tasks (Recommended)"
-    description: "I'll create TodoWrite tasks for typos, formatting, and other quick fixes"
-  - label: "No, show report only"
-    description: "Just show the full review report without creating tasks"
-multiSelect: false
+Example:
+
+```markdown
+## Action Items
+- [ ] Fix Equation (14) sign error in Appendix A
+- [ ] Define `kappa_t` on first use in Section 2
+- [ ] Rephrase paragraph 3 on page 9 for clarity
 ```
 
-If approved, use TodoWrite to create tasks for each auto-fixable issue.
+## Scope to Reviewer Mapping
 
-## Subagent Dispatch Instructions
-
-Use the Task tool with the appropriate registered `subagent_type` for each review agent.
-
-### Available Subagent Types
-
-| Subagent Type | Purpose |
-|--------------|---------|
-| `draft-reviewer:mathematical-reviewer` | Verify derivations, proofs, equations, notation |
-| `draft-reviewer:writing-clarity-reviewer` | Writing quality and clarity |
-| `draft-reviewer:consistency-checker` | Internal consistency of claims, numbers, terminology |
-| `draft-reviewer:argument-logic-reviewer` | Logical flow and argumentation |
-| `draft-reviewer:proofreader` | Typos, grammar, formatting |
-| `draft-reviewer:citation-checker` | Citation completeness and accuracy |
-| `draft-reviewer:code-paper-consistency` | Verify code matches paper claims (if code provided) |
-
-### Dispatch Template
-
-```
-Task tool parameters:
-  subagent_type: "draft-reviewer:[agent-name]"
-  description: "[Agent type] review"
-  prompt: |
-    Review the following academic paper sections.
-
-    Document Summary:
-    [Insert summary]
-
-    Sections to Review:
-    [Insert relevant sections]
-
-    Cross-Reference Index:
-    [Insert index]
-
-    Output your findings using this format:
-    ### [SEVERITY] [Category]: [Brief Title]
-    **Location:** [Section/equation/page]
-    **Issue:** [Description]
-    **Recommendation:** [Suggested fix]
-    **Auto-fixable:** [Yes/No]
-```
-
-### Scope to Agent Mapping
-
-| Subagent Type | Comprehensive | Mathematical | Writing | Quick |
+| Review focus | Comprehensive | Mathematical | Writing | Quick |
 |--------------|:-------------:|:------------:|:-------:|:-----:|
-| draft-reviewer:mathematical-reviewer | ✓ | ✓ | | |
-| draft-reviewer:writing-clarity-reviewer | ✓ | | ✓ | |
-| draft-reviewer:consistency-checker | ✓ | | | |
-| draft-reviewer:argument-logic-reviewer | ✓ | | | |
-| draft-reviewer:proofreader | ✓ | | | ✓ |
-| draft-reviewer:citation-checker | ✓ | | | |
-| draft-reviewer:code-paper-consistency | ✓* | | | |
+| Mathematical reviewer | ✓ | ✓ | | |
+| Writing clarity reviewer | ✓ | | ✓ | |
+| Consistency checker | ✓ | | | |
+| Argument/logic reviewer | ✓ | | | |
+| Proofreader | ✓ | | | ✓ |
+| Citation checker | ✓ | | | |
+| Code-paper consistency | ✓* | | | |
 
-*Only if code path provided
+*Only if a code path was provided
+
+## Optional `spawn_agent` Template
+
+If you use installed reviewer roles, pass focused context instead of the entire document:
+
+```text
+agent_type: draft-reviewer__mathematical-reviewer
+message:
+  Review the attached paper sections for mathematical correctness.
+
+  Document summary:
+  [title, abstract, section map]
+
+  Sections to review:
+  [only the relevant sections]
+
+  Cross-reference index:
+  [notation, tables, figures]
+
+  Output format:
+  ### [SEVERITY] [Category]: [Brief Title]
+  **Location:** [Section/equation/page]
+  **Issue:** [Description]
+  **Recommendation:** [Suggested fix]
+  **Auto-fixable:** [Yes/No]
+```
 
 ## Output Format
 
@@ -231,20 +203,10 @@ Final report structure:
 [List with specific corrections]
 
 ## Auto-Fixable Items
-[List of items that can be addressed via tasks]
+[List of items that can be addressed quickly]
 ```
 
 ## Dependencies
 
-- `mistral-pdf-to-markdown` skill (for PDF input)
-- Task tool with general-purpose subagent
-- TodoWrite tool (for task generation)
-- AskUserQuestion tool (for configuration)
-- Read, Glob, Grep tools (for document processing)
-
-## Notes
-
-- Each review session focuses on one paper for thorough analysis
-- For papers >40 pages, the hierarchical context management is critical
-- Always read the full tex source if available (more precise than PDF conversion)
-- Code-paper consistency check requires explicit code path
+- Optional: `mistral-pdf-to-markdown` skill for higher-quality PDF ingestion
+- Optional: advanced installer roles created by `scripts/install_codex_skills.py`
