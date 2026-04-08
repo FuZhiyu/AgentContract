@@ -16,18 +16,107 @@ Academic research plugins and skills for both Claude Code and Codex. Claude mark
 
 ## Codex
 
-Codex plugin distribution in this repo is currently aimed at private or team use through a repo-scoped marketplace. Official public Codex directory publishing is not self-serve yet.
+This repo already includes a Codex marketplace at [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json). That is the object Codex discovers. The individual installable packages are the plugin folders under [`plugins/`](plugins/), each with its own [`.codex-plugin/plugin.json`](plugins/project-setup/.codex-plugin/plugin.json).
 
-### Preferred Codex install path
+Per the official Codex docs, local plugins are discovered through either:
+
+- a repo marketplace at `$REPO_ROOT/.agents/plugins/marketplace.json`
+- a personal marketplace at `~/.agents/plugins/marketplace.json`
+
+Codex installs local plugins into `~/.codex/plugins/cache/<marketplace>/<plugin>/local/`, and stores enable/disable state in `~/.codex/config.toml`.
+
+Official references:
+
+- https://developers.openai.com/codex/plugins/build#how-codex-uses-marketplaces
+- https://developers.openai.com/codex/plugins/build#marketplace-metadata
+- https://developers.openai.com/codex/plugins/build#install-a-local-plugin-manually
+
+### Repo-scoped Codex install
+
+This is the simplest path if you want to use the current checkout as the marketplace.
 
 1. Clone this repository locally.
-2. Open the repo in Codex.
-3. Restart Codex so it reloads the repo marketplace at `.agents/plugins/marketplace.json`.
-4. Open the Plugins panel or run `/plugins`.
-5. Select the `AgentContract Local Plugins` marketplace.
+2. Open the repo root in Codex.
+3. Restart Codex so it reloads [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json).
+4. Open the plugin directory in Codex with `/plugins` or the Plugins panel.
+5. Choose the marketplace `AgentContract Local Plugins`.
 6. Install the plugin you want.
 
-Bundled skills are available immediately after plugin install. Workflows that depend on standalone reviewer/worker roles still require the advanced installer in [CODEX_INSTALL.md](CODEX_INSTALL.md).
+Notes:
+
+- The marketplace name is `agent-contract-local`; the user-facing title is `AgentContract Local Plugins`.
+- The `source.path` entries in the marketplace are resolved relative to the repo root, not relative to `.agents/plugins/`.
+- If you change a plugin manifest or skill and the update does not appear, restart Codex. If the install still looks stale, disable and reinstall the plugin from the plugin directory.
+
+Bundled skills are available after plugin install. Workflows that depend on standalone reviewer or worker roles still require the advanced installer in [CODEX_INSTALL.md](CODEX_INSTALL.md).
+
+### Personal Codex marketplace
+
+Use this when you want the current repo to appear as a marketplace across repositories instead of only when Codex is opened inside this checkout.
+
+1. Keep a stable local checkout of this repo somewhere under your home directory.
+2. Create `~/.agents/plugins/marketplace.json`.
+3. Point each plugin entry's `source.path` at that checkout using a `./`-prefixed path relative to your home directory.
+4. Restart Codex and install from that personal marketplace.
+
+Example for a single plugin:
+
+```json
+{
+  "name": "agent-contract-personal",
+  "interface": {
+    "displayName": "AgentContract Personal"
+  },
+  "plugins": [
+    {
+      "name": "project-setup",
+      "source": {
+        "source": "local",
+        "path": "./path/to/AgentContract/plugins/project-setup"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Research"
+    }
+  ]
+}
+```
+
+Important:
+
+- Replace `./path/to/AgentContract/...` with a path relative to your home directory if you store the marketplace at `~/.agents/plugins/marketplace.json`.
+- Do not copy this repo's existing marketplace file directly into `~/.agents/plugins/marketplace.json` without rewriting the `source.path` values. The shipped repo marketplace assumes the marketplace root is the repo root.
+- Once the single-plugin version works, expand `plugins[]` to mirror the full list from [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json).
+
+### How another user should install this marketplace
+
+If you want another user to add this marketplace on their own machine, the reliable flow is:
+
+1. Have them clone this repository somewhere under their home directory, for example `~/code/AgentContract` or `~/Dropbox/package_dev/EconResearchPlugins`.
+2. Have them create or update `~/.agents/plugins/marketplace.json` on their machine.
+3. In that personal marketplace file, point each plugin entry at their own local checkout using a `./`-prefixed path relative to their home directory.
+4. Restart Codex.
+5. Open `/plugins`, choose the personal marketplace, and install the desired plugin.
+
+Two common examples:
+
+- If they cloned to `~/code/AgentContract`, use paths like `./code/AgentContract/plugins/project-setup`.
+- If they cloned to `~/Dropbox/package_dev/EconResearchPlugins`, use paths like `./Dropbox/package_dev/EconResearchPlugins/plugins/project-setup`.
+
+What to send another user:
+
+- The repository URL or checkout instructions.
+- A note telling them where to clone it on their machine.
+- A personal marketplace JSON snippet whose `source.path` values match that clone location.
+
+What not to send another user unchanged:
+
+- Your own `~/.agents/plugins/marketplace.json`.
+- This repo's [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json).
+
+Those files are only correct for the machine and marketplace root they were written for.
 
 ### Validate manifests before release
 
@@ -38,6 +127,13 @@ python3 scripts/validate_plugin_manifests.py
 ### Advanced Codex fallback
 
 Use [CODEX_INSTALL.md](CODEX_INSTALL.md) only when you need standalone agent roles installed into `.codex/agents` or you want the older copy/symlink skill installer flow.
+
+### Codex troubleshooting
+
+- If the marketplace does not appear at all, verify that Codex was restarted after adding or editing the marketplace JSON.
+- If the marketplace appears but a plugin does not, validate the repo with `python3 scripts/validate_plugin_manifests.py`.
+- If a personal marketplace cannot find the plugin, the `source.path` is probably being interpreted relative to the wrong root.
+- If a plugin installs but behaves like an older version, reinstall after restarting so Codex refreshes the local cached copy.
 
 ## Claude Code
 

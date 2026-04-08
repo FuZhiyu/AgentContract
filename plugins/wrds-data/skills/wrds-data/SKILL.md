@@ -13,22 +13,29 @@ Download and query data from WRDS (Wharton Research Data Services) using the `wr
 Before any WRDS operation, verify the environment is set up:
 
 ```bash
-uv run python ${CLAUDE_SKILL_DIR}/scripts/wrds_setup.py --check
+uv run --with wrds python -c "import wrds; print('wrds package: OK')"
 ```
+
+Also verify that WRDS credentials exist in the expected PostgreSQL password file:
+
+- macOS/Linux: `~/.pgpass`
+- Windows: `%APPDATA%/postgresql/pgpass.conf`
 
 If any check fails, guide the user through setup:
 
 1. **No WRDS account**: Direct to https://wrds-www.wharton.upenn.edu/register/ — requires institutional affiliation.
 2. **wrds package missing**: Run `uv pip install wrds`.
-3. **No .pgpass credentials**: Either run the interactive setup:
-   ```bash
-   uv run python ${CLAUDE_SKILL_DIR}/scripts/wrds_setup.py --setup
-   ```
-   Or manually create `~/.pgpass` with:
+3. **No .pgpass credentials**: Create the credentials file manually with:
    ```
    wrds-pgdata.wharton.upenn.edu:9737:wrds:USERNAME:PASSWORD
    ```
    Then `chmod 600 ~/.pgpass` on Unix/macOS.
+
+If the user is working from a local checkout of this plugin and wants the helper script, it lives at:
+
+```text
+plugins/wrds-data/skills/wrds-data/scripts/wrds_setup.py
+```
 
 Do NOT proceed with queries until `--check` passes.
 
