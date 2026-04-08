@@ -48,10 +48,11 @@ If not found, try `~/.claude/plugins/**/econ-data-analysis/skills/econ-data-anal
 Check whether descriptive statistics are run:
 
 **Before first transformation:**
-- [ ] Dimensions and column types verified after load?
-- [ ] ID uniqueness checked?
-- [ ] Date coverage examined?
-- [ ] Distribution summary (with tail percentiles p1, p5, p95, p99) for key variables?
+- [ ] Panel structure identified? (panel ID, time ID, unit count, period count, date range)
+- [ ] Balancedness assessed? (periods per unit distribution, entry/exit/gap patterns)
+- [ ] ID uniqueness checked? (panel ID × time identifies each row)
+- [ ] Type-appropriate diagnostics for key variables? (continuous: tail percentiles;
+      categorical: value counts — not blanket `describe()` on all columns)
 - [ ] Missing value report (count, share, pattern)?
 
 **After each major transformation:**
@@ -107,7 +108,7 @@ data silently filled without justification.
 Check the code against every pitfall in the SKILL.md's Pitfalls section:
 
 **Merges:** join type verified? Row counts before/after? Unmatched logged?
-**Sorting:** re-sorted after joins before time-series ops?
+**Time-series operations:** re-sorted after joins? Gaps checked before lags/diffs? Time-aware operators used (or gaps filled)? Spot-checked near entry/exit?
 **Aggregations:** correct function (sum dollars, average rates)? Group-by keys correct?
 **Filtering:** drops logged? Non-randomness checked? Boolean logic correct?
 **Variable construction:** transformation order correct? Denominators safe? Growth rates benchmarked?
@@ -124,6 +125,7 @@ Compile your findings into the report format below.
 - Many-to-many merges creating duplicate observations
 - Wrong aggregation function (averaging dollar amounts, summing rates)
 - Variables with clearly wrong magnitudes used in downstream analysis
+- Gap-unaware lag/lead/diff on panel with gaps (silently wrong values)
 
 **MAJOR** — likely problem or significant guideline violation:
 - Missing descriptive statistics before a major transformation

@@ -25,16 +25,30 @@ The most common analytical error is transforming data you do not understand.
 
 ### After loading any dataset
 
-- **Dimensions**: row × column counts match expectations (N units × T periods)?
-- **Column types**: dates as dates, numerics as numerics (not strings)
-- **ID uniqueness**: panel ID + time uniquely identifies each row? Check for duplicates
-- **Date coverage**: min/max dates; gaps in time series within each unit?
-- **Distribution** for key variables: mean, median, std, min, max, and tail
-  percentiles (p1, p5, p95, p99) — tails are critical for detecting outliers
-- **Missing values**: count and share per variable; is missingness random or
+**Panel structure** (first priority for panel/longitudinal data — the common case):
+- Identify the **panel ID** (firm, fund, country, individual) and **time ID**
+  (year, quarter, month, day)
+- Count unique IDs and unique time periods; verify against expectations
+- Date range: min and max; any expected periods absent?
+- **Balancedness**: compute periods-per-unit distribution (mean, median, min, max).
+  Balanced ratio = actual rows / (N_ids × T_periods). If unbalanced, characterize
+  the pattern — entry/exit, mid-panel gaps, or expanding coverage?
+- For pure cross-sections, note it and skip panel diagnostics
+
+**Variable diagnostics** — tailor to type, focus on key variables:
+- **Continuous** (returns, prices, GDP, weights): mean, median, std, min, max,
+  and tail percentiles (p1, p5, p95, p99) — tails detect outliers
+- **Categorical/binary** (sector codes, indicators, country): value counts and
+  shares; check for unexpected categories or near-zero frequencies
+- **Identifiers**: does panel ID × time uniquely identify rows? Check for duplicates
+- Do NOT run blanket `describe()` on all columns — select key variables explicitly
+
+**Data types and missing values**:
+- Column types: dates as dates, numerics as numerics (not object/string)
+- Missing values: count and share per variable; is missingness random or
   systematic (concentrated in certain periods, countries, or correlated with
   other variables)?
-- **Compare to source**: if documentation states expected sample size, verify
+- Compare to source documentation if expected sample size is stated
 
 When data was already imported and validated upstream, read existing diagnostics
 rather than re-running full validation.
@@ -80,7 +94,17 @@ Expect ~4.7M rows across ~12K funds.
 # %%
 df = pd.read_parquet("Data/holdings.parquet")
 print(f"Shape: {df.shape}")
-df.describe(percentiles=[.01, .05, .25, .5, .75, .95, .99])
+
+# Panel structure
+print(f"Funds: {df['fund_id'].nunique()}, Dates: {df['date'].nunique()}")
+print(f"Period: {df['date'].min()} to {df['date'].max()}")
+obs_per_fund = df.groupby('fund_id')['date'].nunique()
+print(f"Periods/fund — mean: {obs_per_fund.mean():.0f}, "
+      f"median: {obs_per_fund.median():.0f}, "
+      f"min: {obs_per_fund.min()}, max: {obs_per_fund.max()}")
+
+# Key continuous variables only
+df[["market_value", "weight"]].describe(percentiles=[.01, .05, .5, .95, .99])
 
 # %% [markdown]
 """
@@ -96,9 +120,10 @@ print(f"Rows: {n_before} → {len(df)} (delta: {len(df) - n_before})")
 
 ### Row count tracking
 
-Report before/after row counts for **every** sample-changing operation:
-merges, filters, drops, deduplication, sample restrictions. Each gets its own
-code cell so the count is visible in the rendered notebook.
+Log before/after row counts for **every** sample-changing operation:
+merges, filters, drops, deduplication, sample restrictions. Major operations
+(merges, large filters) typically warrant their own cell; minor operations can
+share a cell as long as the count is printed.
 
 ### Decision documentation
 
@@ -169,12 +194,20 @@ the relevant operation.
 - **Unmatched**: log how many rows from each side did not match; assess whether
   non-matching is random or systematic
 
-### Sorting
+### Time-series operations (lag, lead, diff, cumsum, fill)
 
-- **Mandatory** before time-series operations: sort by panel ID + time before
-  any lag, lead, diff, cumsum, or time-fill
-- **Joins destroy sort order** — always re-sort after any merge, even if data
-  was sorted before
+- **Sort first**: sort by panel ID + time before any time-series operation.
+  Joins destroy sort order — always re-sort after any merge
+- **Check for gaps** before applying lags/leads/diffs. If unit `i` is missing
+  period `t`, a naive `shift(1)` treats period `t+1`'s lag as `t-1`'s value —
+  silently wrong. Diagnose gaps per unit before proceeding
+- **Use time-aware operators** when available: in Julia, `PanelShift.jl`
+  handles gaps correctly; in Python, merge on lagged time index or `reindex`
+  to a full time grid before shifting. If the framework only supports positional
+  shift, verify there are no gaps first, or fill gaps explicitly (with NaN,
+  not interpolation) so shifts are correct
+- **After**: spot-check a few units to confirm the lag/lead aligns with the
+  correct time period, especially near panel entry/exit
 
 ### Reshaping
 
