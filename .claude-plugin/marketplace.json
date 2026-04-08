@@ -77,6 +77,16 @@
       },
       "source": "./plugins/wrds-data",
       "category": "research"
+    },
+    {
+      "name": "econ-data-analysis",
+      "version": "0.1.0",
+      "description": "Principle-based guide for rigorous economic data analysis with jupytext logging and multi-source validation",
+      "author": {
+        "name": "Julie Zhiyu Fu"
+      },
+      "source": "./plugins/econ-data-analysis",
+      "category": "research"
     }
   ]
 }

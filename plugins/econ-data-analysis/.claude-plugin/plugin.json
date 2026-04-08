@@ -1,0 +1,11 @@
+{
+  "name": "econ-data-analysis",
+  "version": "0.1.0",
+  "description": "Principle-based guide for rigorous economic data analysis with jupytext logging and multi-source validation",
+  "author": {
+    "name": "Zhiyu Fu"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/FuZhiyu/AgentContract",
+  "keywords": ["research", "data-analysis", "economics", "finance", "jupytext", "panel-data"]
+}
